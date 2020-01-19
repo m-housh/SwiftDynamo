@@ -8,6 +8,11 @@
 import Foundation
 import DynamoDB
 
+public protocol AnyModel: class {
+    static var schema: String { get }
+    init()
+}
+
 public protocol DynamoModel {
 
     static var tableName: String { get }
