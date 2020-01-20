@@ -8,6 +8,9 @@
 import Foundation
 import DynamoDB
 
+// MARK: TODO
+// - Create encodable errors, instead of fatal errors.
+
 /// Encodes `Encodable` objects to `DynamoDB.AttributeValue`s.
 public struct DynamoEncoder {
 
@@ -26,11 +29,10 @@ public struct DynamoEncoder {
         guard let topContainer = encoder.storage.containers.first else {
             fatalError("Invalid top container.")
         }
-
         if let singleValue = topContainer as? _DynamoSingleValueContainer {
             return singleValue.attribute
         } else if let dictionary = topContainer as? NSMutableDictionary {
-            return .init(m: try serializeDict(dictionary))
+            return .init(m: try parseDict(dictionary))
         } else if let array = topContainer as? _DynamoArrayContainer {
             return try array.serialize()
         } else {
@@ -45,11 +47,13 @@ public struct DynamoEncoder {
         guard let topContainer = encoder.storage.containers.first as? NSMutableDictionary else {
             fatalError("Invalid top container.")
         }
-        return try serializeDict(topContainer)
+        return try parseDict(topContainer)
     }
 
-    /// Converts dictionary values to the appropriate `DynamoDB.AttributeValue`
-    private func serializeDict(_ dict: NSMutableDictionary) throws -> [String: DynamoDB.AttributeValue] {
+    /// Converts dictionary values to the appropriate `DynamoDB.AttributeValue`.
+    /// Some values don't automatically get converted to a concrete `DynamoDB.AttributeValue`, so this bridges
+    /// that gap.
+    private func parseDict(_ dict: NSMutableDictionary) throws -> [String: DynamoDB.AttributeValue] {
 
         var rv = [String: DynamoDB.AttributeValue]()
 
@@ -63,6 +67,14 @@ public struct DynamoEncoder {
                 rv[key] = DynamoDB.AttributeValue(m: map)
             } else if let singleValue = value as? _DynamoSingleValueContainer {
                 rv[key] = singleValue.attribute
+            } else if let dictionary = value as? [String: _DynamoSingleValueContainer] {
+                var newDict = [String: DynamoDB.AttributeValue]()
+                for (key, value) in dictionary {
+                    newDict[key] = value.attribute
+                }
+                rv[key] = .init(m: newDict)
+            } else if let nsDictionary = value as? NSMutableDictionary {
+                rv[key] = .init(m: try parseDict(nsDictionary))
             } else {
                 fatalError("Invalid item in encoding chain: \(value)")
             }
@@ -72,6 +84,9 @@ public struct DynamoEncoder {
     }
 
 }
+
+fileprivate protocol _DynamoDictionaryEncodable { }
+extension Dictionary: _DynamoDictionaryEncodable where Key == String, Value: Encodable { }
 
 /// Used when encoding an array of objects inside an item that is being encoded.
 /// This is needed because the container stack requires items to be `NSObject`s.
@@ -636,6 +651,33 @@ extension _DynamoEncoder {
         .init(n: "\(value)")
     }
 
+    func box(_ value: [String: Encodable]) throws -> NSObject? {
+        let depth = storage.count
+        let result = storage.pushKeyedContainer()
+
+        do {
+            for (key, value) in value {
+                self.codingPath.append(_DynamoCodingKey(stringValue: key)!)
+                defer { self.codingPath.removeLast() }
+                result[key] = try box(value)
+            }
+        } catch {
+            // if the value pushed a container before it failed.
+            if self.storage.count > depth {
+                let _ = storage.popContainer()
+            }
+
+            throw error
+        }
+
+        // the top container should be our encoded dict.
+        guard self.storage.count > depth else {
+            return nil
+        }
+
+        return self.storage.popContainer()
+    }
+
     func box(_ value: Encodable) throws -> NSObject {
         try self.box_(value) ?? NSMutableDictionary()
     }
@@ -643,6 +685,12 @@ extension _DynamoEncoder {
     // Boxes an encodable using the current stack, then pops it off and returns it,
     // if it was successful, if it fails we return nil.
     func box_(_ value: Encodable) throws -> NSObject? {
+
+        // check if it's an encodable dictionary.
+        if let dictionary = value as? _DynamoDictionaryEncodable {
+            return try box(dictionary as! [String: Encodable])
+        }
+
         // get our current depth to ensure a container gets pushed onto the stack.
         let depth = storage.count
         do {

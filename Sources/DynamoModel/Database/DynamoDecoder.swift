@@ -8,55 +8,115 @@
 import Foundation
 import DynamoDB
 
+/// Decodes  to`Decodable` value types appropriately handling types that are `DynamoDB.AttributeValue`s.
 public struct DynamoDecoder {
 
+    /// Decode a single value from a `DynamoDB.AttributeValue`
+    ///
+    /// - parameters:
+    ///     - type: The type to decode from the attribute.
+    ///     - attribute: The attributte to decode the value from.
     public func decode<T: Decodable>(_ type: T.Type, from attribute: DynamoDB.AttributeValue) throws -> T {
         try _DynamoDecoder(referencing: attribute).decode(type)
     }
 
+    /// Decode values from a dictionary.
+    ///
+    /// - parameters:
+    ///     - type: The type to decode from the attribute.
+    ///     - dictionary: The dictionary to decode the values from.
     public func decode<T: Decodable>(_ type: T.Type, from dictionary: [String: Any]) throws -> T {
         try _DynamoDecoder(referencing: dictionary).decode(type)
     }
 
+    /// Decode values from an array.
+    ///
+    /// - parameters:
+    ///     - type: The type to decode from the attribute.
+    ///     - array: The array to decode the values from.
     public func decode<T: Decodable>(_ type: T.Type, from array: [Any]) throws -> T {
         try _DynamoDecoder(referencing: array).decode(type)
     }
+
+    /// Decode values from data.
+    ///
+    /// - parameters:
+    ///     - type: The type to decode from the attribute.
+    ///     - data: The data to decode the values from.
+    public func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+
+        do {
+                // try to decode the data as dictionary of attributes.
+            let dict = try JSONDecoder().decode([String: DynamoDB.AttributeValue].self, from: data)
+            return try decode(type, from: dict)
+        } catch {
+            do {
+                // try to decode the data as an array of dictionary attributes.
+                let array = try JSONDecoder().decode([[String: DynamoDB.AttributeValue]].self, from: data)
+                return try decode(type, from: array)
+            } catch {
+                // defer to json decoder
+                return try JSONDecoder().decode(type, from: data)
+            }
+        }
+    }
 }
 
-fileprivate struct _DecoderStorage {
+/// Storage used during decoding procedures.
+internal struct _DecoderStorage {
+
+    /// The decoding container stack.
     var containers: [Any] = []
 
+    /// Create new storage with empty container stack.
     init() { }
 
+    /// Add a container to the stack.
     mutating func pushContainer(container: Any) {
         self.containers.append(container)
     }
 
+    /// Remove the last container from the stack.
     mutating func popContainer() {
         precondition(!containers.isEmpty, "Attempting to pop container from empty stack.")
         containers.removeLast()
     }
 
+    /// Access the most recent container on the stack.
     var topContainer: Any {
         precondition(!containers.isEmpty, "Empty container stack")
         return containers.last!
     }
 
+    /// The current stack count.
     var count: Int { containers.count }
 }
 
-fileprivate class _DynamoDecoder: Decoder {
+/// A custom decoder that can appropriately decode / parse `DynamoDB.AttributeValues`.
+internal class _DynamoDecoder: Decoder {
 
+    /// The coding path taken to get to this point.
+    /// - SeeAlso: `Decoder`
     var codingPath: [CodingKey]
+
+    /// - SeeAlso: `Decoder`
     var userInfo: [CodingUserInfoKey : Any] = [:]
+
+    /// The internal storage used while decoding values.
     var storage: _DecoderStorage
 
+    /// Create a new decoder instance.
+    ///
+    /// - parameters:
+    ///     - container: The item to decode values from.
+    ///     - codingPath: The coding path taken to get to this point, defaults to empty.
     init(referencing container: Any, at codingPath: [CodingKey] = []) {
         self.storage = _DecoderStorage()
         storage.pushContainer(container: container)
         self.codingPath = codingPath
     }
 
+    /// - SeeAlso: `Decoder`
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         guard let topContainer = self.storage.topContainer as? [String: Any] else {
             throw DecodingError.typeMismatch(expected: [String: Any].self)
@@ -66,6 +126,7 @@ fileprivate class _DynamoDecoder: Decoder {
         return KeyedDecodingContainer(container)
     }
 
+    /// - SeeAlso: `Decoder`
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         guard let topContainer = self.storage.topContainer as? [Any] else {
             throw DecodingError.typeMismatch(expected: [Any].self)
@@ -73,13 +134,15 @@ fileprivate class _DynamoDecoder: Decoder {
         return _UnkeyedDecoder(referencing: self, wrapping: topContainer)
     }
 
+    /// - SeeAlso: `Decoder`
     func singleValueContainer() throws -> SingleValueDecodingContainer {
         self
     }
 
 }
 
-fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
+/// The keyed decoding container used for decoding.
+internal struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
 
     typealias Key = K
 
@@ -118,10 +181,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Bool.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Bool.self)!
     }
 
     func decode(_ type: String.Type, forKey key: K) throws -> String {
@@ -132,10 +192,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: String.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: String.self)!
     }
 
     func decode(_ type: Double.Type, forKey key: K) throws -> Double {
@@ -146,10 +203,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Double.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Double.self)!
     }
 
     func decode(_ type: Float.Type, forKey key: K) throws -> Float {
@@ -160,10 +214,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Float.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Float.self)!
     }
 
     func decode(_ type: Int.Type, forKey key: K) throws -> Int {
@@ -174,10 +225,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Int.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Int.self)!
     }
 
     func decode(_ type: Int8.Type, forKey key: K) throws -> Int8 {
@@ -188,10 +236,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Int8.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Int8.self)!
     }
 
     func decode(_ type: Int16.Type, forKey key: K) throws -> Int16 {
@@ -202,10 +247,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Int16.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Int16.self)!
     }
 
     func decode(_ type: Int32.Type, forKey key: K) throws -> Int32 {
@@ -216,10 +258,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Int32.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Int32.self)!
     }
 
     func decode(_ type: Int64.Type, forKey key: K) throws -> Int64 {
@@ -230,10 +269,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: Int64.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: Int64.self)!
     }
 
     func decode(_ type: UInt.Type, forKey key: K) throws -> UInt {
@@ -244,10 +280,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: UInt.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: UInt.self)!
     }
 
     func decode(_ type: UInt8.Type, forKey key: K) throws -> UInt8 {
@@ -258,10 +291,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: UInt8.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: UInt8.self)!
     }
 
     func decode(_ type: UInt16.Type, forKey key: K) throws -> UInt16 {
@@ -272,10 +302,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: UInt16.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: UInt16.self)!
     }
 
     func decode(_ type: UInt32.Type, forKey key: K) throws -> UInt32 {
@@ -286,10 +313,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: UInt32.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: UInt32.self)!
     }
 
     func decode(_ type: UInt64.Type, forKey key: K) throws -> UInt64 {
@@ -300,10 +324,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: UInt64.self) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: UInt64.self)!
     }
 
     func decode<T>(_ type: T.Type, forKey key: K) throws -> T where T : Decodable {
@@ -314,10 +335,7 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
-        guard let value = try decoder.unbox(item, as: type) else {
-            throw DecodingError.notFound
-        }
-        return value
+        return try decoder.unbox(item, as: type)!
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: K) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -365,8 +383,10 @@ fileprivate struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
 }
 
 // MARK: - UnkeyedDecoder
-fileprivate struct _UnkeyedDecoder: UnkeyedDecodingContainer {
-
+/// The unkeyed decoding container used for decoding.
+internal struct _UnkeyedDecoder: UnkeyedDecodingContainer {
+    // I'm not necessarily sure when / how these get called, but they're required
+    // for `Decoder`.
     let container: [Any]
     var codingPath: [CodingKey]
     let decoder: _DynamoDecoder
@@ -672,6 +692,7 @@ fileprivate struct _UnkeyedDecoder: UnkeyedDecodingContainer {
 }
 
 // MARK: - SingleValueDecoder
+/// Decodes single values.
 extension _DynamoDecoder: SingleValueDecodingContainer {
 
     func expectNonNil() throws {
@@ -767,6 +788,7 @@ extension _DynamoDecoder: SingleValueDecodingContainer {
 }
 
 // MARK: - Unbox
+/// Attempts to unbox concrete types from the input to decode.
 extension _DynamoDecoder {
 
     private func findAttribute(_ value: Any) throws -> DynamoDB.AttributeValue? {
@@ -782,14 +804,17 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Bool.Type) throws -> Bool? {
-        try findAttribute(value)?.bool ?? value as? Bool
+        if let bool = value as? Bool { return bool }
+        return try findAttribute(value)?.bool
     }
 
     func unbox(_ value: Any, as type: String.Type) throws -> String? {
-        try findAttribute(value)?.s ?? value as? String
+        if let string = value as? String { return string }
+        return try findAttribute(value)?.s
     }
 
     func unbox(_ value: Any, as type: Double.Type) throws -> Double? {
+        if let item = value as? Double { return item }
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Double
         }
@@ -797,6 +822,7 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Float.Type) throws -> Float? {
+        if let item = value as? Float { return item }
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Float
         }
@@ -804,6 +830,7 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Int.Type) throws -> Int? {
+        if let item = value as? Int { return item }
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Int
         }
@@ -811,6 +838,7 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Int8.Type) throws -> Int8? {
+        if let item = value as? Int8 { return item }
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Int8
         }
@@ -818,6 +846,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Int16.Type) throws -> Int16? {
+        if let item = value as? Int16 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Int16
         }
@@ -826,6 +856,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Int32.Type) throws -> Int32? {
+        if let item = value as? Int32 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Int32
         }
@@ -833,6 +865,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: Int64.Type) throws -> Int64? {
+        if let item = value as? Int64 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? Int64
         }
@@ -840,6 +874,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: UInt.Type) throws -> UInt? {
+        if let item = value as? UInt { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? UInt
         }
@@ -847,6 +883,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: UInt8.Type) throws -> UInt8? {
+        if let item = value as? UInt8 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? UInt8
         }
@@ -854,6 +892,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: UInt16.Type) throws -> UInt16? {
+        if let item = value as? UInt16 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? UInt16
         }
@@ -861,6 +901,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: UInt32.Type) throws -> UInt32? {
+        if let item = value as? UInt32 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? UInt32
         }
@@ -868,6 +910,8 @@ extension _DynamoDecoder {
     }
 
     func unbox(_ value: Any, as type: UInt64.Type) throws -> UInt64? {
+        if let item = value as? UInt64 { return item }
+
         guard let numberString = try findAttribute(value)?.n else {
             return value as? UInt64
         }
@@ -875,6 +919,7 @@ extension _DynamoDecoder {
     }
 
     func unbox<T>(_ value: Any, as type: T.Type) throws -> T? where T : Decodable {
+        if let item = value as? T { return item }
         return try unbox_(value, as: type) as? T
     }
 
@@ -886,7 +931,9 @@ extension _DynamoDecoder {
 
 }
 
-enum DecodingError: Error{
+// MARK: - DecodingError
+/// Errors thrown during the decoding process.
+enum DecodingError: Error {
     case typeMismatch(expected: Any.Type)
     case tooManyValues
     case notFound

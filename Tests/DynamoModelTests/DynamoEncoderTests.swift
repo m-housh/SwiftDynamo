@@ -30,11 +30,12 @@ final class DynamoEncoderTests: XCTestCase {
             let uInt32 = UInt32(exactly: 32.0)!
             let uInt64 = UInt64(exactly: 64.0)!
             let float = Float(exactly: 10.0)!
+            let dictionary = ["Foo": 1, "Bar": 2]
         }
 
         let encoder = DynamoEncoder()
         let result = try encoder.encode(TestModel())
-        XCTAssertEqual(result.count, 15)
+        XCTAssertEqual(result.count, 16)
         XCTAssertEqual(result["string"]!.s!, "foo")
         XCTAssertEqual(result["int"]!.n!, "1")
         XCTAssertEqual(result["double"]!.n!, "20.05")
@@ -50,6 +51,8 @@ final class DynamoEncoderTests: XCTestCase {
         XCTAssertEqual(result["uInt32"]!.n!, "32")
         XCTAssertEqual(result["uInt64"]!.n!, "64")
         XCTAssertEqual(result["float"]!.n!, "10.0")
+        XCTAssertEqual(result["dictionary"]!.m!["Foo"]!.n, "1")
+        XCTAssertEqual(result["dictionary"]!.m!["Bar"]!.n, "2")
 
     }
 
