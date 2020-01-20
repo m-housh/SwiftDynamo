@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  DynamoEncoder.swift
 //  
 //
 //  Created by Michael Housh on 1/18/20.
@@ -8,46 +8,90 @@
 import Foundation
 import DynamoDB
 
+/// Encodes `Encodable` objects to `DynamoDB.AttributeValue`s.
 public struct DynamoEncoder {
 
+    /// Create a new encoder.
     public init() { }
 
+    /// Encode a list of encodables.
+    public func encode<E>(_ encodable: [E]) throws -> [[String: DynamoDB.AttributeValue]] where E: Encodable {
+        return try encodable.map { try self.encode($0) }
+    }
+
+    /// Encode a single item to `DynamoDB.AttributeValue`
+    public func encodeToDynamoAttribute<E>(_ encodable: E) throws -> DynamoDB.AttributeValue where E: Encodable {
+        let encoder = _DynamoEncoder()
+        try encoder.encode(encodable)
+        guard let topContainer = encoder.storage.containers.first else {
+            fatalError("Invalid top container.")
+        }
+
+        if let singleValue = topContainer as? _DynamoSingleValueContainer {
+            return singleValue.attribute
+        } else if let dictionary = topContainer as? NSMutableDictionary {
+            return .init(m: try serializeDict(dictionary))
+        } else if let array = topContainer as? _DynamoArrayContainer {
+            return try array.serialize()
+        } else {
+            fatalError("Failed to encode: \(encodable)")
+        }
+    }
+
+    /// Encode a single encodable to a dictionary.
     public func encode<E>(_ encodable: E) throws -> [String: DynamoDB.AttributeValue] where E: Encodable {
         let encoder = _DynamoEncoder()
         try encodable.encode(to: encoder)
-        print("Encoder.Storage: \(encoder.storage.containers)")
         guard let topContainer = encoder.storage.containers.first as? NSMutableDictionary else {
             fatalError("Invalid top container.")
         }
+        return try serializeDict(topContainer)
+    }
+
+    /// Converts dictionary values to the appropriate `DynamoDB.AttributeValue`
+    private func serializeDict(_ dict: NSMutableDictionary) throws -> [String: DynamoDB.AttributeValue] {
+
         var rv = [String: DynamoDB.AttributeValue]()
 
-        for (key, value) in topContainer {
+        for (key, value) in dict {
             let key = key as! String
-            if let array = value as? _DynamoArrayObject {
+            if let array = value as? _DynamoArrayContainer {
                 rv[key] = try array.serialize()
             } else if let attribute = value as? DynamoDB.AttributeValue {
                 rv[key] = attribute
             } else if let map = value as? [String: DynamoDB.AttributeValue] {
                 rv[key] = DynamoDB.AttributeValue(m: map)
+            } else if let singleValue = value as? _DynamoSingleValueContainer {
+                rv[key] = singleValue.attribute
             } else {
-                fatalError("Invalid item in encoding chain.")
+                fatalError("Invalid item in encoding chain: \(value)")
             }
         }
 
         return rv
     }
+
 }
 
-internal class _DynamoArrayObject: NSObject {
+/// Used when encoding an array of objects inside an item that is being encoded.
+/// This is needed because the container stack requires items to be `NSObject`s.
+fileprivate class _DynamoArrayContainer: NSObject {
 
+    /// The valid array types we can encode.
     enum ArrayType {
         case string
         case number
     }
 
+    /// The type of array this instance is for.
     var _type: ArrayType? = nil
-    var type: ArrayType? {
-        get { _type }
+
+    /// The type of array this instance is for.
+    ///
+    /// The type gets set when encoding the first item for this array. All the folllowing items must be
+    /// of the same type `number` or `string` or a fatal error will be thrown.
+    var type: ArrayType {
+        get { _type ?? .string }
         set {
             guard _type == nil || newValue == _type else {
                 fatalError("Attempting to change array encoding type after it's been set.")
@@ -57,94 +101,144 @@ internal class _DynamoArrayObject: NSObject {
         }
     }
 
+    /// The array that stores our encoded values, this should already be pushed on to the container stack,
+    /// so mutations will reflect in the container.
     var array: NSMutableArray
 
+    /// Create a new container.
+    ///
+    /// - parameters:
+    ///     - array: The array that we are encoding values into.
     init(wrapping array: NSMutableArray) {
         self.array = array
     }
 
+    /// Add an item to our encoded values.
     func append(_ string: String) { array.add(string) }
 
+    /// Encodes our values into a `DynamoDB.AttributeValue`.
+    /// If an array is empty it will not get encoded because we don't have a type reference.
     func serialize() throws -> DynamoDB.AttributeValue {
-        guard let type = self.type else {
-            fatalError("Attempting to serialize an array without an encoding type")
-        }
 
         guard let strings = array as? [String] else {
             fatalError("Casting to string array failed.")
         }
 
         switch type {
-        case .number: return .init(ns: strings)
-        case .string: return .init(ss: strings)
+        case .number: return DynamoDB.AttributeValue(ns: strings)
+        case .string: return DynamoDB.AttributeValue(ss: strings)
         }
     }
 }
 
-struct _DynamoStorage {
+/// A container used when encoding a single item.  This is needed because the container stack requires items to be `NSObject`s.
+fileprivate class _DynamoSingleValueContainer: NSObject {
+
+    /// The attribute we are holding.
+    var attribute: DynamoDB.AttributeValue
+
+    /// Create a new single value container holding the attribute.
+    ///
+    /// - parameters:
+    ///     - attribute: The `DynamoDB.AttributeValue` we are holding for the encoder.
+    init(_ attribute: DynamoDB.AttributeValue) {
+        self.attribute = attribute
+    }
+}
+
+/// The object used to store the container stack during an encoding process.
+fileprivate struct _DynamoStorage {
+
+    /// The container stack.
     var containers: [NSObject] = []
 
+    /// Add a keyed container to the stack.
     mutating func pushKeyedContainer() -> NSMutableDictionary {
         let container = NSMutableDictionary()
         containers.append(container)
         return container
     }
 
-    mutating func pushUnkeyedContainer() -> _DynamoArrayObject {
+    /// Add an unkeyed container to the stack.
+    mutating func pushUnkeyedContainer() -> _DynamoArrayContainer {
         let array = NSMutableArray()
-        let container = _DynamoArrayObject(wrapping: array)
+        let container = _DynamoArrayContainer(wrapping: array)
         containers.append(container)
         return container
     }
 
+    /// Remove the last container from the stack.
     fileprivate mutating func popContainer() -> NSObject {
         precondition(!self.containers.isEmpty, "Empty container stack.")
         return containers.popLast()!
     }
 
+    /// Push any container onto the stack (typically used in single value operations).
+    mutating func push(container: NSObject) {
+        containers.append(container)
+    }
+
+    /// Our current container stack count.
     var count: Int { containers.count }
 }
 
-internal class _DynamoEncoder: Encoder {
+/// The actual encoder used to encode items to `[String: DynamoDB.AttributeValue]`.
+/// This will not encode an array of encodables, so they must be encoded seperately.  This is due to the way array's encoded.
+/// The workaround is to have a method on the top encoder that just maps arrays to this encoder.  See, `DynamoEncoder.encode(_:)`
+fileprivate class _DynamoEncoder: Encoder {
 
+    /// - SeeAlso: `Encoder`
     var userInfo: [CodingUserInfoKey : Any] = [:]
 
-    var codingPath: [CodingKey] = []
+    /// The coding path taken to get to this point.
+    /// - SeeAlso: `Encoder`
+    var codingPath: [CodingKey]
+
+    /// Our container stack.
     var storage: _DynamoStorage
 
+    /// Create a new encoder at the given coding path.
+    ///
+    /// - parameters:
+    ///     - codingPath: The current path, defaults to empty.
     init(codingPath: [CodingKey] = []) {
         self.codingPath = codingPath
         self.storage = _DynamoStorage()
     }
 
+    /// Internal helper that tells if a container has been pushed onto the stack for this coding path level.
     var canEncodeNewValue: Bool {
         self.codingPath.count == self.storage.count
     }
 
+    /// Create a keyed encoding container.
+    /// - SeeAlso: `Encoder`
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
 
         let topContainer: NSMutableDictionary
 
-        if canEncodeNewValue {
+        if canEncodeNewValue { // push a new container onto the stack.
             topContainer = storage.pushKeyedContainer()
-        } else {
+        } else { // we've already started encoding at this level, so get the last container off of the stack.
             guard let container = storage.containers.last as? NSMutableDictionary else {
                 fatalError("Attempting to push a new keyed container when already encoded at this path.")
             }
             topContainer = container
         }
 
-        let container = _DynamoKeyedContainer<Key>(
+        // create a keyed encoding container.
+        let keyedContainer = _DynamoKeyedContainer<Key>(
             referencing: self,
             codingPath: self.codingPath,
             container: topContainer
         )
 
-        return KeyedEncodingContainer(container)
+        return KeyedEncodingContainer(keyedContainer)
     }
 
+    /// Create an unkeyed encoding container.
+    /// - SeeAlso: `Encoder`
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-//        fatalError("Implement")
         let container = storage.pushUnkeyedContainer()
         return _DynamoUnkeyedContainer(
             referencing: self,
@@ -153,280 +247,335 @@ internal class _DynamoEncoder: Encoder {
         )
     }
 
+    /// Create a single value encoding container.
+    /// - SeeAlso: `Encoder`
     func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError("Implement")
+        return self
     }
-
 
 }
 
-//extension _DynamoEncoder {
-//
-//    fileprivate func assertCanEncodeNewValue() {
-//        precondition(self.canEncodeNewValue, "Attempt to encode value through single value container when previously value already encoded.")
-//    }
-//}
-
+/// Used when encoding keyed items.
 fileprivate struct _DynamoKeyedContainer<Key>: KeyedEncodingContainerProtocol where Key: CodingKey {
 
+    /// The coding path taken to get to this point.
+    /// - SeeAlso: `Encoder`
     private(set) var codingPath: [CodingKey]
+
+    /// The parent encoder.
     private let encoder: _DynamoEncoder
+
+    /// The container we are encoding values into.
     private var container: NSMutableDictionary
 
+    /// Create a new keyed container.
+    ///
+    /// - parameters:
+    ///     - encoder: Our parent encoder.
+    ///     - codingPath: The coding path taken to get to this point.
+    ///     - container: The container we are encoding values into.
     init(referencing encoder: _DynamoEncoder, codingPath: [CodingKey], container: NSMutableDictionary) {
         self.encoder = encoder
         self.codingPath = codingPath
         self.container = container
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encodeNil(forKey key: Key) throws {
         container[key.stringValue] = encoder.boxNil()
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Bool, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: String, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Double, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Float, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int8, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int16, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int32, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int64, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt8, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt16, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt32, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt64, forKey key: Key) throws {
         container[key.stringValue] = encoder.box(value)
     }
 
-    mutating func encode(_ value: [String], forKey key: Key) throws {
-        container[key.stringValue] = encoder.box(value)
-    }
-
-    mutating func encode(_ value: [Int], forKey key: Key) throws  {
-        container[key.stringValue] = encoder.box(value)
-    }
-
-    mutating func encode(_ value: [Double], forKey key: Key) throws  {
-        container[key.stringValue] = encoder.box(value)
-    }
-
-    mutating func encode(_ value: [Float], forKey key: Key) throws  {
-        container[key.stringValue] = encoder.box(value)
-    }
-
+    /// - SeeAlso: `Encoder`
     mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
         self.encoder.codingPath.append(key)
         defer { self.encoder.codingPath.removeLast() }
         container[key.stringValue] = try encoder.box(value)
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
         fatalError("Implement")
-//        let dictionary = [String: DynamoDB.AttributeValue]()
-//        container[key.stringValue] = .init(m: dictionary)
-//        codingPath.append(key)
-//        defer { self.codingPath.removeLast() }
-//        let container = _DynamoKeyedContainer<NestedKey>(referencing: self.encoder, codingPath: self.codingPath, container: dictionary)
-//        return KeyedEncodingContainer(container)
     }
-
+    /// - SeeAlso: `Encoder`
     mutating func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
         fatalError()
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func superEncoder() -> Encoder {
         self.encoder
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func superEncoder(forKey key: Key) -> Encoder {
         self.encoder
-
-//        _DynamoReferencingEncoder(referencing: self.encoder, for: key, with: self.container)
     }
-
 }
 
-struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
-
-    internal enum EncodingType {
-        case number
-        case string
-    }
+fileprivate struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
 
     private(set) var codingPath: [CodingKey]
     let encoder: _DynamoEncoder
-    var container: _DynamoArrayObject
+    var container: _DynamoArrayContainer
 
-    private var encodingType: _DynamoArrayObject.ArrayType? {
+    private var encodingType: _DynamoArrayContainer.ArrayType {
         get { container.type }
         set { container.type = newValue }
     }
 
-    init(referencing encoder: _DynamoEncoder, codingPath: [CodingKey], container: _DynamoArrayObject) {
+    init(referencing encoder: _DynamoEncoder, codingPath: [CodingKey], container: _DynamoArrayContainer) {
         self.encoder = encoder
         self.container = container
         self.codingPath = codingPath
     }
 
     var count: Int { container.array.count }
-
+    /// - SeeAlso: `Encoder`
     mutating func encodeNil() throws { fatalError("Value must be a string or number.") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Bool)   throws { fatalError("Value must be a string or number.") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int)    throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int8)   throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int16)  throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int32)  throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Int64)  throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt)   throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt8)  throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt16) throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt32) throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: UInt64) throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: String) throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Double) throws { self.container.append("\(value)") }
+    /// - SeeAlso: `Encoder`
     mutating func encode(_ value: Float)  throws { self.container.append("\(value)") }
 
+    /// - SeeAlso: `Encoder`
     mutating func encode<T>(_ value: T) throws where T : Encodable {
-        print("Unkeyed.encode<T>: \(value)")
-        let stringValue: String
+        self.encoder.codingPath.append(_DynamoCodingKey(intValue: count)!)
+        defer { self.encoder.codingPath.removeLast() }
 
         if let string = value as? String {
-            stringValue = string
             encodingType = .string
+            try self.encode(string)
         } else if let int = value as? Int {
-            stringValue = int.description
             encodingType = .number
-        } else if let double = value as? Double {
-            stringValue = double.description
+            try self.encode(int)
+        } else if let num = value as? Double {
             encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? Int8 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? Int16 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? Int32 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? Int64 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? UInt {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? UInt8 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? UInt16 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? UInt32 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? UInt64 {
+            encodingType = .number
+            try self.encode(num)
+        } else if let num = value as? Float {
+            encodingType = .number
+            try self.encode(num)
         } else {
             fatalError("Value must be a string or number.")
         }
 
-        self.encoder.codingPath.append(_DynamoCodingKey(intValue: count)!)
-        container.append(stringValue)
-        print("Container: \(container)")
-        print("Storage.Containers: \(encoder.storage.containers)")
+//        // add our path to the coding path and add our string value to the container.
+//        self.encoder.codingPath.append(_DynamoCodingKey(intValue: count)!)
+//        container.append(stringValue)
 
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
         fatalError("Value must be a string or number.")
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
         fatalError("Value must be a string or number.")
     }
 
+    /// - SeeAlso: `Encoder`
     mutating func superEncoder() -> Encoder {
         self.encoder
-//        _DynamoReferencingEncoder(referencing: self.encoder, at: self.count, with: self.container)
     }
-
 
 }
 
-internal class _DynamoReferencingEncoder: _DynamoEncoder {
+// MARK: SingleValueEncodingContainer
+extension _DynamoEncoder: SingleValueEncodingContainer {
 
-    private enum Reference {
-        case array(NSMutableArray, Int)
-//        case dictionary([String: DynamoDB.AttributeValue], String)
+    func encodeNil() throws {
+        storage.push(container: _DynamoSingleValueContainer(boxNil()))
     }
 
-    private let encoder: _DynamoEncoder
-    private let reference: Reference
-
-    init(referencing encoder: _DynamoEncoder, at index: Int, with array: NSMutableArray) {
-        self.encoder = encoder
-        self.reference = .array(array, index)
-        super.init(codingPath: encoder.codingPath)
-        self.codingPath.append(_DynamoCodingKey(intValue: index)!)
-        print("Initialized referencing encoder at index: \(index)")
+    func encode(_ value: Bool) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
     }
 
-//    init(referencing encoder: _DynamoEncoder, for key: CodingKey,
-//         with dictionary: [String: DynamoDB.AttributeValue]) {
-//        self.encoder = encoder
-//        self.reference = .dictionary(dictionary, key.stringValue)
-//        super.init(codingPath: encoder.codingPath)
-//        self.codingPath.append(key)
-//    }
-
-    // MARK: - Coding Path Operations
-
-    internal override var canEncodeNewValue: Bool {
-        // With a regular encoder, the storage and coding path grow together.
-        // A referencing encoder, however, inherits its parents coding path, as well as the key it was created for.
-        // We have to take this into account.
-        return self.storage.count == self.codingPath.count - self.encoder.codingPath.count - 1
+    func encode(_ value: String) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
     }
 
-    // MARK: - Deinitialization
+    func encode(_ value: Double) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
 
-    // Finalizes `self` by writing the contents of our storage to the referenced encoder's storage.
-    deinit {
-        let value: Any
-        switch self.storage.count {
-        case 0: value = NSMutableArray()
-        case 1: value = self.storage.popContainer()
-        default: fatalError("Referencing encoder deallocated with multiple containers on stack.")
-        }
+    func encode(_ value: Float) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
 
-        switch self.reference {
-        case .array(let array, let index):
-            print("Refrencing encoder inserting value: \(value), at index: \(index)")
-            array.insert(value, at: index)
+    func encode(_ value: Int) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
 
-//        case .dictionary(let dictionary, let key):
-//            dictionary[key] = value
-        }
+    func encode(_ value: Int8) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: Int16) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: Int32) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: Int64) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: UInt) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: UInt8) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: UInt16) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: UInt32) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode(_ value: UInt64) throws {
+        storage.push(container: _DynamoSingleValueContainer(box(value)))
+    }
+
+    func encode<T>(_ value: T) throws where T : Encodable {
+        storage.push(container: try box(value))
     }
 }
 
 
-// MARK: - Box
+// MARK: - Box Methods
+// These methods are used to convert items to `DynamoDB.AttributeValue`s approriately for their
+// given type.
 extension _DynamoEncoder {
+
     func boxNil() -> DynamoDB.AttributeValue {
         .init(null: true)
     }
@@ -487,36 +636,19 @@ extension _DynamoEncoder {
         .init(n: "\(value)")
     }
 
-    func box(_ value: [String]) -> DynamoDB.AttributeValue  {
-        .init(ss: value)
-    }
-
-    func box(_ value: [Int]) -> DynamoDB.AttributeValue  {
-        .init(ns: value.map { $0.description })
-    }
-
-    func box(_ value: [Double]) -> DynamoDB.AttributeValue  {
-        .init(ns: value.map { $0.description })
-    }
-
-    func box(_ value: [Float]) -> DynamoDB.AttributeValue  {
-        .init(ns: value.map { $0.description })
-    }
-
-    func box(_ value: String, for encodingType: _DynamoUnkeyedContainer.EncodingType) {
-
-    }
-
     func box(_ value: Encodable) throws -> NSObject {
         try self.box_(value) ?? NSMutableDictionary()
     }
 
-
+    // Boxes an encodable using the current stack, then pops it off and returns it,
+    // if it was successful, if it fails we return nil.
     func box_(_ value: Encodable) throws -> NSObject? {
+        // get our current depth to ensure a container gets pushed onto the stack.
         let depth = storage.count
         do {
             try value.encode(to: self)
         } catch {
+            // remove the last container on failure.
             if self.storage.count > depth {
                 _ = storage.popContainer()
             }
@@ -531,6 +663,8 @@ extension _DynamoEncoder {
     }
 }
 
+// MARK: - _DynamoCodingKey
+/// Used for internal coding keys used primarily when encoding array items.
 enum _DynamoCodingKey: CodingKey {
 
     case string(String)
