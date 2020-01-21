@@ -33,12 +33,12 @@ public struct DatabaseOutput {
         }
     }
 
-    public func decode<T>(_ field: String, as type: T.Type) throws -> T {
+    public func decode<T: Decodable>(_ field: String, as type: T.Type) throws -> T {
         guard let attribute = attribute(field) else {
             throw DynamoModelError.notFound
         }
 
-        guard let decoded = try? attribute._dynamoValue()?.value as? T else {
+        guard let decoded = try? DynamoDecoder().decode(type, from: attribute) else {
             throw DynamoModelError.attributeError
         }
 

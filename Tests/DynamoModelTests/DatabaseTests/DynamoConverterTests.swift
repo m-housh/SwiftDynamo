@@ -10,7 +10,7 @@ import DynamoDB
 @testable import DynamoModel
 
 
-final class DynamoEncoderTests: XCTestCase {
+final class DynamoConverterTests: XCTestCase {
 
     func testSimpleEncoding() throws {
         struct TestModel: Codable {
@@ -33,8 +33,7 @@ final class DynamoEncoderTests: XCTestCase {
             let dictionary = ["Foo": 1, "Bar": 2]
         }
 
-        let encoder = DynamoEncoder()
-        let result = try encoder.encode(TestModel())
+        let result = try DynamoConverter().convert(TestModel())
         XCTAssertEqual(result.count, 16)
         XCTAssertEqual(result["string"]!.s!, "foo")
         XCTAssertEqual(result["int"]!.n!, "1")
@@ -75,8 +74,7 @@ final class DynamoEncoderTests: XCTestCase {
             let float = [Float(exactly: 10.0)!]
         }
 
-        let encoder = DynamoEncoder()
-        let result = try encoder.encode(TestModel())
+        let result = try DynamoConverter().convert(TestModel())
         XCTAssertEqual(result.count, 14)
         XCTAssertEqual(result["strings"]?.ss, ["foo", "bar"])
         XCTAssertEqual(result["numbers"]?.ns, ["1", "2", "3", "4"])
@@ -106,8 +104,7 @@ final class DynamoEncoderTests: XCTestCase {
             let number = 1
         }
 
-        let encoder = DynamoEncoder()
-        let result = try encoder.encode(Bar())
+        let result = try DynamoConverter().convert(Bar())
 
         XCTAssertEqual(result.count, 2)
         XCTAssertEqual(result["number"]?.n, "1")
@@ -126,7 +123,7 @@ final class DynamoEncoderTests: XCTestCase {
         }
 
         let items = [TestObject(number: 1), TestObject(number: 2), TestObject(number: 3)]
-        let result = try DynamoEncoder().encode(items)
+        let result = try DynamoConverter().convert(items)
         XCTAssertEqual(result.count, 3)
         XCTAssertEqual(result[0]["name"]?.s, "Foo")
         XCTAssertEqual(result[0]["number"]?.n, "1")
@@ -137,25 +134,25 @@ final class DynamoEncoderTests: XCTestCase {
     }
 
     func testSingleValueEncoding() throws {
-        let encoder = DynamoEncoder()
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute("foo").s, "foo")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(1).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(1.0).n, "1.0")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(false).bool, false)
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(["foo", "bar"]).ss, ["foo", "bar"])
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute([1, 2]).ns, ["1", "2"])
-        let map = try encoder.encodeToDynamoAttribute(["foo": "bar"]).m!
+        let encoder = DynamoConverter()
+        XCTAssertEqual(try encoder.convertToAttribute("foo").s, "foo")
+        XCTAssertEqual(try encoder.convertToAttribute(1).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(1.0).n, "1.0")
+        XCTAssertEqual(try encoder.convertToAttribute(false).bool, false)
+        XCTAssertEqual(try encoder.convertToAttribute(["foo", "bar"]).ss, ["foo", "bar"])
+        XCTAssertEqual(try encoder.convertToAttribute([1, 2]).ns, ["1", "2"])
+        let map = try encoder.convertToAttribute(["foo": "bar"]).m!
         XCTAssertEqual(map["foo"]?.s, "bar")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(UInt(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(UInt8(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(UInt16(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(UInt32(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(UInt64(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(Int8(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(Int16(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(Int32(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(Int64(exactly: 1.0)!).n, "1")
-        XCTAssertEqual(try encoder.encodeToDynamoAttribute(Float(exactly: 1.0)!).n, "1.0")
+        XCTAssertEqual(try encoder.convertToAttribute(UInt(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(UInt8(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(UInt16(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(UInt32(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(UInt64(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(Int8(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(Int16(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(Int32(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(Int64(exactly: 1.0)!).n, "1")
+        XCTAssertEqual(try encoder.convertToAttribute(Float(exactly: 1.0)!).n, "1.0")
     }
 
     func testWithCustomEncodable() throws {
@@ -175,8 +172,7 @@ final class DynamoEncoderTests: XCTestCase {
             }
         }
 
-        let encoder = DynamoEncoder()
-        let result = try encoder.encode(TestCustom())
+        let result = try DynamoConverter().convert(TestCustom())
         XCTAssertEqual(result.count, 2)
         XCTAssertEqual(result["BarKey"]?.s, "Bar")
         XCTAssertEqual(result["FooKey"]?.s, "Foo")

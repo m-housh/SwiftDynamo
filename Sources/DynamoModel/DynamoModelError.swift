@@ -11,4 +11,5 @@ public enum DynamoModelError: Error {
 
     case attributeError
     case notFound
+    case invalidField(key: String, valueType: Any.Type, error: Error?)
 }

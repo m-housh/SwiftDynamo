@@ -55,8 +55,13 @@ public struct DynamoDecoder {
                 let array = try JSONDecoder().decode([[String: DynamoDB.AttributeValue]].self, from: data)
                 return try decode(type, from: array)
             } catch {
-                // defer to json decoder
-                return try JSONDecoder().decode(type, from: data)
+                do {
+                    let attribute = try JSONDecoder().decode(DynamoDB.AttributeValue.self, from: data)
+                    return try decode(type, from: attribute)
+                } catch {
+                    // defer to json decoder
+                    return try JSONDecoder().decode(type, from: data)
+                }
             }
         }
     }

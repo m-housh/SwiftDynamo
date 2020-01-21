@@ -11,6 +11,12 @@ import DynamoDB
 
 final class DynamoDecoderTests: XCTestCase {
 
+    func testPrimitiveDecoding() throws {
+        let encoded = try JSONEncoder().encode(1)
+        let decoded = try DynamoDecoder().decode(Int.self, from: encoded)
+        XCTAssertEqual(decoded, 1)
+    }
+
     func testSimpleDecoding() throws {
         struct Simple: Codable, Equatable {
             let string = "foo"
@@ -301,16 +307,14 @@ final class DynamoDecoderTests: XCTestCase {
         }
 
         let encoded = try DynamoEncoder().encode(Simple())
-        let data = try JSONEncoder().encode(encoded)
-        let decoded = try DynamoDecoder().decode(Simple.self, from: data)
+        let decoded = try DynamoDecoder().decode(Simple.self, from: encoded)
         XCTAssertEqual(decoded, Simple())
 
         let arrayEncoded = try DynamoEncoder().encode([Simple(), Simple(), Simple()])
-        let arrayData = try JSONEncoder().encode(arrayEncoded)
-        let decodedArray = try DynamoDecoder().decode([Simple].self, from: arrayData)
+        let decodedArray = try DynamoDecoder().decode([Simple].self, from: arrayEncoded)
         XCTAssertEqual(decodedArray, [Simple(), Simple(), Simple()])
 
-        let simpleData = try JSONEncoder().encode(1)
+        let simpleData = try DynamoEncoder().encode(1)
         XCTAssertEqual(try DynamoDecoder().decode(Int.self, from: simpleData), 1)
     }
 }

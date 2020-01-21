@@ -17,17 +17,29 @@ public struct DynamoEncoder {
     /// Create a new encoder.
     public init() { }
 
-    /// Encode a list of encodables.
-    public func encode<E>(_ encodable: [E]) throws -> [[String: DynamoDB.AttributeValue]] where E: Encodable {
-        return try encodable.map { try self.encode($0) }
+    public func encode<E: Encodable>(_ encodable: E) throws -> Data {
+        do {
+            return try JSONEncoder().encode(try convert(encodable))
+        } catch { // we weren't something that could convert to a dictionary. try to encode a primitive.
+            return try JSONEncoder().encode(try convertToDynamoAttribute(encodable))
+        }
     }
 
-    /// Encode a single item to `DynamoDB.AttributeValue`
-    public func encodeToDynamoAttribute<E>(_ encodable: E) throws -> DynamoDB.AttributeValue where E: Encodable {
+    public func encode<E: Encodable>(_ encodable: [E]) throws -> Data {
+        try JSONEncoder().encode(try convert(encodable))
+    }
+
+    /// Convert a list of encodables.
+    internal func convert<E>(_ encodable: [E]) throws -> [[String: DynamoDB.AttributeValue]] where E: Encodable {
+        return try encodable.map { try self.convert($0) }
+    }
+
+    /// Convert a single item to `DynamoDB.AttributeValue`
+    internal func convertToDynamoAttribute<E>(_ encodable: E) throws -> DynamoDB.AttributeValue where E: Encodable {
         let encoder = _DynamoEncoder()
         try encoder.encode(encodable)
         guard let topContainer = encoder.storage.containers.first else {
-            fatalError("Invalid top container.")
+            throw EncodingError.invalidTopContainer
         }
         if let singleValue = topContainer as? _DynamoSingleValueContainer {
             return singleValue.attribute
@@ -40,12 +52,12 @@ public struct DynamoEncoder {
         }
     }
 
-    /// Encode a single encodable to a dictionary.
-    public func encode<E>(_ encodable: E) throws -> [String: DynamoDB.AttributeValue] where E: Encodable {
+    /// Convert a single encodable to a dictionary.
+    public func convert<E>(_ encodable: E) throws -> [String: DynamoDB.AttributeValue] where E: Encodable {
         let encoder = _DynamoEncoder()
         try encodable.encode(to: encoder)
         guard let topContainer = encoder.storage.containers.first as? NSMutableDictionary else {
-            fatalError("Invalid top container.")
+            throw EncodingError.invalidTopContainer
         }
         return try parseDict(topContainer)
     }
@@ -739,4 +751,9 @@ enum _DynamoCodingKey: CodingKey {
     init?(intValue: Int) {
         self = .int(intValue)
     }
+}
+
+// MARK: - Encoding Error
+enum EncodingError: Error {
+    case invalidTopContainer
 }
