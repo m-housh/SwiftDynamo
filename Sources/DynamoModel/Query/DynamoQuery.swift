@@ -112,19 +112,8 @@ extension DynamoQuery {
     /// Value types that can be passed to the database.
     public enum Value {
 
-        // this is not used to pass values, however marks values
-        // set on properties that they have been modified and need
-        // passed in the query.
         case bind(Encodable)
 
-        // Fields that need to be saved during a `create` or `update` query.
-        case fields([AnyField])
-
-        case attribute(DynamoDB.AttributeValue)
-
-        // these are not currently used, but should be capable
-        // of passing `batch` type of queries.
-        case list([[String: Value]])
         case dictionary([String: Value])
     }
 
@@ -225,5 +214,25 @@ extension DynamoQuery {
         }
 
         case field(String, Method, Value)
+    }
+}
+
+protocol AnyBindable {
+
+    func convertToAttribute() throws -> DynamoDB.AttributeValue
+}
+
+extension Encodable {
+    func convertToAttribute() throws -> DynamoDB.AttributeValue {
+        try DynamoConverter().convertToAttribute(self)
+    }
+}
+
+extension Optional: AnyBindable where Wrapped: Encodable {
+    func convertToAttribute() throws -> DynamoDB.AttributeValue {
+        guard let strongSelf = self else {
+            return .init(null: true)
+        }
+        return try DynamoConverter().convertToAttribute(strongSelf)
     }
 }

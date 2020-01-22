@@ -28,7 +28,7 @@ extension DynamoModel {
     private func _create(on database: DynamoDB) -> EventLoopFuture<Void> {
         self._$id.generate()
         return Self.query(on: database)
-            .set(self.inputFields)
+            .set(self.input)
             .action(.create)
             .run()
     }
@@ -36,7 +36,7 @@ extension DynamoModel {
     private func _update(on database: DynamoDB) -> EventLoopFuture<Void> {
         return Self.query(on: database)
             .filter(\._$id == self.id!)
-            .set(self.inputFieldsWithChanges)
+            .set(self.input)
             .action(.update)
             .run()
     }

@@ -45,7 +45,7 @@ extension DynamoDB.PutItemInput {
         let options = query.optionsContainer
 
         // convert the query input to [String: DynamoDB.AttributeValue]
-        var item = try! query.input[0].convertFieldsToAttributes()
+        var item = try! query.input[0].convertToAttributes()
 
         // check for a default partition key and add it.
         if let partitionKey = query.partitionKey, let partitionValue = partitionKey.value {
@@ -120,30 +120,37 @@ extension DynamoDB.DeleteRequest {
 
 extension DynamoQuery.Value {
 
-    func convertFieldsToAttributes() throws -> [String: DynamoDB.AttributeValue] {
+    func assertDictionary() throws -> [String: DynamoQuery.Value] {
         switch self {
-        case let .fields(fields):
-            return try fields.reduce(into: [String: DynamoDB.AttributeValue]()) { result, field in
-                result[field.key] = try field.attributeValue()
-            }
+        case let .dictionary(dictionary): return dictionary
         default:
-            fatalError("Invalid input type for put item.")
+            fatalError("Expected dictionary: \(self)")
         }
+    }
 
+    func convertToAttributes() throws -> [String: DynamoDB.AttributeValue] {
+        let dictionary = try assertDictionary()
+        return try _convertDictionary(dictionary)
     }
 
     func convertToAttributeValueUpdate(action: DynamoDB.AttributeAction = .put) throws -> [String: DynamoDB.AttributeValueUpdate] {
-        try convertFieldsToAttributes()
+        try convertToAttributes()
             .reduce(into: [String: DynamoDB.AttributeValueUpdate]()) { result, keyAndAttribute in
                 result[keyAndAttribute.key] = .init(action: action, value: keyAndAttribute.value)
             }
     }
 
+    func _convertDictionary(_ dictionary: [String: DynamoQuery.Value]) throws -> [String: DynamoDB.AttributeValue] {
+        try dictionary.reduce(into: [String: DynamoDB.AttributeValue]()) { result, keyAndValue in
+            result[keyAndValue.key] = try keyAndValue.value.attributeValue()
+        }
+    }
+
     func attributeValue() throws -> DynamoDB.AttributeValue {
         switch self {
-        case let .attribute(attribute): return attribute
-        default:
-            fatalError("No attribute found or is the wrong type.")
+        case let .bind(encodable): return try encodable.convertToAttribute()
+        case let .dictionary(dictionary):
+            return .init(m: try _convertDictionary(dictionary))
         }
     }
 }

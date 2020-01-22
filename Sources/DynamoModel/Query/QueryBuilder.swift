@@ -28,9 +28,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     public init(database: DynamoDB) {
         self.database = database
         self.query = .init(schema: Model.schema)
-//        self.query.fields = Model().fields.map { (_, field) in
-//            return field.key
-//        }
     }
 
     @discardableResult
@@ -41,7 +38,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
     @discardableResult
     public func limit(_ limit: Int) -> Self {
-        return set(.limit(limit))
+        return setOption(.limit(limit))
     }
 
     @discardableResult
@@ -57,14 +54,8 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
-    public func set(_ option: DynamoQuery.Option) -> Self {
+    public func setOption(_ option: DynamoQuery.Option) -> Self {
         query.options.append(option)
-        return self
-    }
-
-    @discardableResult
-    public func set(_ data: [AnyField]) -> Self {
-        query.input.append(.fields(data))
         return self
     }
 
@@ -90,8 +81,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     ) -> Self
         where Value: Codable
     {
-        let attribute = try! DynamoConverter().convertToAttribute(value)
-        return self.filter(.field(field.key, method, .attribute(attribute)))
+        return self.filter(.field(field.key, method, .bind(value)))
     }
 
     @discardableResult
@@ -102,8 +92,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     ) -> Self
         where Value: Codable
     {
-        let attribute = try! DynamoConverter().convertToAttribute(value)
-        return self.filter(.field(Model.key(for: field), method, .attribute(attribute)))
+        return self.filter(.field(Model.key(for: field), method, .bind(value)))
     }
 
     @discardableResult
@@ -114,8 +103,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     ) -> Self
         where Field: FieldRepresentible, Field.Value == Value
     {
-        let attribute = try! DynamoConverter().convertToAttribute(value)
-        query.filters.append(.field(Model.key(for: field), method, .attribute(attribute)))
+        query.filters.append(.field(Model.key(for: field), method, .bind(value)))
         return self
     }
 
@@ -209,6 +197,6 @@ public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
     {
         self.key = Model.init()[keyPath: lhs].field.key
         self.method = method
-        self.value = .attribute(try! DynamoConverter().convertToAttribute(value))
+        self.value = .bind(value)
     }
 }

@@ -103,21 +103,7 @@ extension AnyModel {
 
     /// Whether any fields have been set / modified on a model.
     var hasChanges: Bool {
-        return inputFieldsWithChanges.count > 0
-    }
-
-    /// Exposes only fields with changes.
-    var inputFieldsWithChanges: [AnyField] {
-        inputFields.filter { $0.inputValue != nil }
-    }
-
-    /// Exposes fields for database query operatiions.
-    var inputFields: [AnyField] {
-        fields
-            .map { keyAndValue in
-                let (_, field) = keyAndValue
-                return field
-            }
+        return input.count > 0
     }
 
     /// Returns all the fields attached / declared on a model. Along with their label.
