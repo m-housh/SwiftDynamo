@@ -40,6 +40,15 @@ final class QueryBuilderTests: XCTestCase {
         }
     }
 
+    func testFirst() throws {
+        let model = try TestModel
+            .query(on: database)
+            .first()
+            .wait()
+        
+        XCTAssertNotNil(model)
+    }
+
     func testCreate() throws {
         do {
             let model = TestModel()

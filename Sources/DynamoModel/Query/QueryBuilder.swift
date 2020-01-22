@@ -12,18 +12,25 @@ import NIO
 // MARK: - TODO
 //  add partition key method.
 
+/// Used to build / set options on a query before executing on the database.
 public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
+    /// The query we are building.
     public var query: DynamoQuery
+
+    /// The database to run the query on.
     public let database: DynamoDB
 
+    /// Create a new query builder.
+    ///
+    /// - parameters:
+    ///     - database: The database to run the query on.
     public init(database: DynamoDB) {
         self.database = database
         self.query = .init(schema: Model.schema)
-        self.query.fields = Model().fields.map { (_, field) in
-            return field.key
-        }
-//        self.query.sortKey = Model.schema.sortKey
+//        self.query.fields = Model().fields.map { (_, field) in
+//            return field.key
+//        }
     }
 
     @discardableResult
@@ -33,14 +40,14 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
-    public func sortKey(key: String, to value: CustomStringConvertible) -> Self {
-        query.sortKey = DynamoQuery.SortKey(key: key, value: value.description)
-        return self
+    public func limit(_ limit: Int) -> Self {
+        return set(.limit(limit))
     }
 
     @discardableResult
-    public func limit(_ limit: Int) -> Self {
-        return set(.limit(limit))
+    public func set(sortKey key: String, to value: CustomStringConvertible) -> Self {
+        query.sortKey = DynamoQuery.SortKey(key: key, value: value.description)
+        return self
     }
 
     @discardableResult
@@ -70,6 +77,14 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
 extension DynamoQueryBuilder {
 
+    public func first() -> EventLoopFuture<Model?> {
+        return self
+            .limit(1)
+            .all()
+            .map { $0.first }
+    }
+
+    /// Runs the query and returns all items.
     public func all() -> EventLoopFuture<[Model]> {
         var models = [Result<Model, Error>]()
         return self.all { model in
@@ -82,6 +97,10 @@ extension DynamoQueryBuilder {
         }
     }
 
+    /// Run the query and react to each model that was returned one at a time.
+    ///
+    /// - parameters:
+    ///     - onOutput: The callback that reacts to the generated model.
     public func all(_ onOutput: @escaping (Result<Model, Error>) -> ()) -> EventLoopFuture<Void> {
         var all = [Model]()
 
@@ -102,10 +121,15 @@ extension DynamoQueryBuilder {
         }
     }
 
+    /// Run the query and react to the results.
+    ///
+    /// - parameters:
+    ///     - onOutput: A callback that recieves the query results.
     public func run(_ onOutput: @escaping (DatabaseOutput) -> ()) -> EventLoopFuture<Void> {
         database.execute(query: query, onResult: onOutput)
     }
 
+    /// Runs the query and ignores results.
     public func run() -> EventLoopFuture<Void> {
         self.run({ _ in })
     }

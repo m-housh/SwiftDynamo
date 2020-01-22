@@ -8,12 +8,15 @@
 import Foundation
 import DynamoDB
 
+
 extension DynamoDB.QueryInput {
+
+    // MARK: - QueryInput
 
     static func from(_ query: DynamoQuery) -> DynamoDB.QueryInput {
         let options = query.optionsContainer
         return .init(
-            attributesToGet: query.sortKey == nil ? query.fields : nil, // can not use this when sort key is providedß
+            attributesToGet: query.sortKey == nil ? query.fields : nil, // can not use this when sort key is provided
             conditionalOperator: query.optionsContainer.conditionalOperator,
             consistentRead: options.consistentRead,
             exclusiveStartKey: options.exclusiveStartKey,
@@ -35,6 +38,7 @@ extension DynamoDB.QueryInput {
 }
 
 extension DynamoDB.PutItemInput {
+    // MARK: - PutItemInput
 
     static func from(_ query: DynamoQuery) -> DynamoDB.PutItemInput {
         precondition(query.input.count == 1, "Invalid input count for put item.")
@@ -51,5 +55,19 @@ extension DynamoDB.PutItemInput {
             returnValues: nil,
             tableName: query.schema.tableName
         )
+    }
+}
+
+extension DynamoQuery.Value {
+
+    func convertToPutItem() throws -> [String: DynamoDB.AttributeValue] {
+        switch self {
+        case let .fields(fields):
+            return try fields.reduce(into: [String: DynamoDB.AttributeValue]()) { result, field in
+                result[field.key] = try field.attributeValue()
+            }
+        default:
+            fatalError("Invalid input type for put item.")
+        }
     }
 }

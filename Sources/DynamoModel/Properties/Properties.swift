@@ -39,27 +39,44 @@ extension AnyProperty where Self: FieldRepresentible {
 
 /// A database field that is attached to a model.  This could be an id, a sort key, or a regular database field.
 public protocol AnyField: AnyProperty {
+
+    /// The database key for the field.
     var key: String { get }
+
+    /// Input from the user.  This get's set when a value has been set for the first time or
+    /// updated based on user input.
     var inputValue: DynamoQuery.Value? { get set }
+
+    /// Convert ourself to a valid `DynamoDB.AttributeValue`
     func attributeValue() throws -> DynamoDB.AttributeValue?
 }
 
 /// A type that can be used as a sort key for a `DynamoSchema`.
 public protocol AnySortKey {
+
+    /// The database key for the sort key.
     var key: String { get }
+
+    /// The value for the sort key.
     var sortKeyValue: String? { get }
-//    var inputValue: DynamoQuery.Value? { get }
 }
 
 /// A type that can expose a concrete `Field`.
 public protocol FieldRepresentible {
+
     associatedtype Value: Codable
+
+    /// A database field.
     var field: Field<Value> { get }
 }
 
-/// A database id field.
+/// A specialized database field that is used as an identifier.
 protocol AnyID: AnyField {
+
+    /// Generate a random value, if applicable / available.
     func generate()
+
+    /// Whether the id exists in the database.
     var exists: Bool { get set }
 }
 
@@ -82,11 +99,14 @@ extension AnyField where Self: FieldRepresentible {
 
 extension AnyModel {
 
+    /// Exposes fields for database query operatiions.
     var inputFields: [AnyField] {
         fields.map { $0.1 }
     }
 
-    /// Returns all the fields attached / declared on a model.
+    /// Returns all the fields attached / declared on a model. Along with their label.
+    /// The label is not the same as the database key.  It will be the same as the variable
+    /// name set on the model.
     var fields: [(String, AnyField)] {
         properties.compactMap {
             guard let field = $1 as? AnyField else { return nil }

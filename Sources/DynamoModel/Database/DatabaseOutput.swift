@@ -8,7 +8,7 @@
 import Foundation
 import DynamoDB
 
-
+/// Holds database output from a query.
 public struct DatabaseOutput {
 
     /// The database the output was created on.

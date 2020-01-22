@@ -9,13 +9,24 @@ import Foundation
 import NIO
 import DynamoDB
 
+/// A generic model representation.
 public protocol AnyModel: class, Codable {
+
+    /// The database schema / table the model references.
     static var schema: DynamoSchema { get }
+
+    // Required to be empty initializable for
+    // reflection operations.
     init()
 }
 
+/// A model that is specifically for `DynamoDB`.
 public protocol DynamoModel: AnyModel {
+
+    /// The id value used for the model.
     associatedtype IDValue: Codable, Hashable
+
+    /// The model's unique identifier.
     var id: IDValue { get set }
 }
 
@@ -42,6 +53,7 @@ extension AnyModel {
 
 }
 
+// Custome model specific encoder.
 private struct _ModelEncoder: Encoder, SingleValueEncodingContainer {
 
     var container: KeyedEncodingContainer<_DynamoCodingKey>
@@ -74,6 +86,7 @@ private struct _ModelEncoder: Encoder, SingleValueEncodingContainer {
     }
 }
 
+// Custome model specifiic decoder.
 private struct _ModelDecoder: Decoder, SingleValueDecodingContainer {
 
     let container: KeyedDecodingContainer<_DynamoCodingKey>
@@ -118,6 +131,10 @@ extension AnyModel {
         return input
     }
 
+    /// Sets property values based on output from the database.
+    ///
+    /// - parameters:
+    ///     - output: The database output to get values from.
     func output(from output: DatabaseOutput) throws {
         try self.properties.forEach { (_, property) in
             try property.output(from: output)
@@ -135,10 +152,17 @@ extension AnyModel {
 //        return sortKeyField.1 as? AnySortKey
     }
 
+    /// Get the database key for a given field.
+    ///
+    /// - parameters:
+    ///     - field: The field to get the id for.
     public static func key<Field>(for field: KeyPath<Self, Field>) -> String where Field: FieldRepresentible {
+        // This is primarily for internal use when creating / parsing attributes
+        // for query operations.
         Self.init()[keyPath: field].field.key
     }
 
+    /// Finds / references the id field on a model.
     var anyID: AnyID {
         guard let id = Mirror(reflecting: self).descendant("_id") as? AnyID else {
             fatalError("id property must be declared using @ID")
@@ -149,12 +173,10 @@ extension AnyModel {
 }
 
 extension DynamoModel {
+
+    /// A reference to our id field, this gets used to tell if an item / id
+    /// already exists and to generate an id if applicable.
     var _$id: ID<IDValue> {
         self.anyID as! ID<IDValue>
     }
-}
-
-enum DynamoEmployeeModelError: Error {
-    case invalidAttributes
-    case invalidID
 }

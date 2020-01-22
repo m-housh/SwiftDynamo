@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Field.swift
 //  
 //
 //  Created by Michael Housh on 1/16/20.
@@ -8,10 +8,11 @@
 import Foundation
 import DynamoDB
 
+/// A database field.
 @propertyWrapper
 public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
 
-    /// The database field key.
+    /// The database key.
     public let key: String
 
     // Value from the database.
@@ -20,6 +21,7 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
     // Value from user input.
     public var inputValue: DynamoQuery.Value?
 
+    // The value that gets exposed to the user.
     public var wrappedValue: Value {
         get {
             if let value = inputValue { // Check if we have user input and use that.
@@ -41,14 +43,22 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
         }
     }
 
+    /// Create a new field.
+    ///
+    /// - parameters:
+    ///     - key: The database key for the field.
     public init(key: String) {
         self.key = key
     }
 
+    // The value exposed when referencing with `$`.
+    // Allows access to internal values / methods on a property wrapper.
     public var projectedValue: Field<Value> { self }
 
+    // Exposes our self for database query operations.
     public var field: Field<Value> { self }
 
+    // Sets our state based on database output.
     public func output(from output: DatabaseOutput) throws {
         if output.contains(self.key) {
             self.inputValue = nil

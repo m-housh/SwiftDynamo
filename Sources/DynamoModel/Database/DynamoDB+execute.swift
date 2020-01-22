@@ -11,28 +11,42 @@ import NIO
 
 extension DynamoDB {
 
-    func execute(
+    /// Execute a query and react to it's output.
+    ///
+    /// - parameters:
+    ///     - query: The query to execute.
+    ///     - onResult: A callback to run with the resulting output.
+    public func execute(
         query: DynamoQuery,
         onResult callback: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         switch query.action {
-        case .read: return _executeReadQuery(query, onResult: callback)
+        case .read: return _read(query, onResult: callback)
         case .create: return _create(query, onResult: callback)
         default:
             fatalError()
         }
     }
 
-    func _executeReadQuery(
+    // run a read query.
+    // If no sort key / partition keys are on the query then we use
+    // the more intrusive `scan`.  We use `query` otherwise.
+    private func _read(
         _ query: DynamoQuery,
         onResult callback: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
+        // MARK: - TODO
+        //      This will likely need updated to use a partition key as the
+        //      differentiator.
+
         if query.sortKey == nil {
+            // use scan.
             return self.scan(.init(tableName: query.schema.tableName))
                 .map { output in
                     callback(.init(database: self, output: .list(output.items!)))
                 }
         } else {
+            // use query when a sort / partition key is available.
             return self.query(.from(query))
                 .map { output in
                     callback(.init(database: self, output: .list(output.items!)))
@@ -40,7 +54,8 @@ extension DynamoDB {
         }
     }
 
-    func _create(
+    // Create a single item in the database.
+    private func _create(
         _ query: DynamoQuery,
         onResult callback: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
@@ -52,27 +67,12 @@ extension DynamoDB {
     }
 }
 
-extension DynamoQuery {
+//extension DynamoQuery {
+//    private var _sortKey: (String, String)? {
+//        guard let sortKey = self.sortKey else { return nil }
+//        guard let value = sortKey.sortKeyValue else { return nil }
+//        return (sortKey.key, value)
+//    }
+//
+//}
 
-    private var _sortKey: (String, String)? {
-        guard let sortKey = self.sortKey else { return nil }
-        guard let value = sortKey.sortKeyValue else { return nil }
-        return (sortKey.key, value)
-    }
-
-
-}
-
-extension DynamoQuery.Value {
-
-    func convertToPutItem() throws -> [String: DynamoDB.AttributeValue] {
-        switch self {
-        case let .fields(fields):
-            return try fields.reduce(into: [String: DynamoDB.AttributeValue]()) { result, field in
-                result[field.key] = try field.attributeValue()
-            }
-        default:
-            fatalError("Invalid input type for put item.")
-        }
-    }
-}
