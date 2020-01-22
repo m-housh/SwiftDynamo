@@ -13,7 +13,6 @@ final class DynamoModelTests: XCTestCase {
     func testModelEncoding() throws {
         let model = TestModel()
         model.id = .init()
-        model.sortKey = "foo"
         model.title = "bar"
         model.order = 1
         model.completed = false
@@ -23,8 +22,7 @@ final class DynamoModelTests: XCTestCase {
         XCTAssertEqual(model, decoded)
 
         let asDynamoAttributes = try DynamoDecoder().decode([String: DynamoDB.AttributeValue].self, from: encoded)
-        XCTAssertEqual(asDynamoAttributes["id"]?.s, model.id.uuidString)
-        XCTAssertEqual(asDynamoAttributes["sortKey"]?.s, model.sortKey)
+        XCTAssertEqual(asDynamoAttributes["id"]?.s, model.id!.uuidString)
         XCTAssertEqual(asDynamoAttributes["title"]?.s, model.title)
         XCTAssertEqual(asDynamoAttributes["order"]?.n!, "\(model.order!)")
     }

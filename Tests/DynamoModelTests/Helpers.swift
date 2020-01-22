@@ -12,13 +12,10 @@ import AWSSDKSwiftCore
 
 final class TestModel: DynamoModel, Equatable, Codable {
 
-    static var schema: DynamoSchema = "TodoTest"
+    static var schema = DynamoSchema("TodoTest", partitionKey: .init(key: "ListID", default: "list"))
 
     @ID(key: "TodoID")
-    var id: UUID
-
-    @SortKey(key: "ListID")
-    var sortKey: String
+    var id: UUID?
 
     @Field(key: "Title")
     var title: String
@@ -33,7 +30,6 @@ final class TestModel: DynamoModel, Equatable, Codable {
 
     static func ==(lhs: TestModel, rhs: TestModel) -> Bool {
         lhs.id == rhs.id &&
-            lhs.sortKey == rhs.sortKey &&
             lhs.title == rhs.title &&
             lhs.order == rhs.order
     }

@@ -22,6 +22,8 @@ public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
     /// An optional static sort key used when querying the table.
     public let sortKey: SortKey?
 
+    public var partitionKey: PartitionKey?
+
     /// Create a new instance.
     ///
     /// - parameters:
@@ -37,9 +39,10 @@ public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
     /// - parameters:
     ///     - tableName: The table name.
     ///     - sortKey: A `SortKey` to use for this instance.
-    public init(_ tableName: String, sortKey: SortKey) {
+    public init(_ tableName: String, sortKey: SortKey? = nil, partitionKey: PartitionKey) {
         self.tableName = tableName
         self.sortKey = sortKey
+        self.partitionKey = partitionKey
     }
 
     /// Create a new instance from an inline string, with no sort key.
@@ -54,6 +57,7 @@ public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
     public init(stringLiteral value: String) {
         self.tableName = value
         self.sortKey = nil
+        self.partitionKey = nil
     }
 }
 
@@ -93,5 +97,16 @@ extension DynamoSchema {
 //        public var inputValue: DynamoQuery.Value? {
 //            .bind(self)
 //        }
+    }
+}
+
+public struct PartitionKey {
+
+    public let key: String
+    public var value: CustomStringConvertible?
+
+    public init(key: String, default value: CustomStringConvertible? = nil) {
+        self.key = key
+        self.value = value
     }
 }

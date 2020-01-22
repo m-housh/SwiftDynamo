@@ -1,16 +1,24 @@
 {
-    "TableName": "TodoTest1",
+    "TableName": "TodoTest",
     "KeySchema": [
-        {   
-            "AttributeName": "TodoID",
+        {
+            "AttributeName": "ListID",
             "KeyType": "HASH"
         },
+        {
+            "AttributeName": "TodoID",
+            "KeyType": "RANGE"
+        }
     ],
     "AttributeDefinitions": [ 
         {
             "AttributeName": "TodoID",
             "AttributeType": "S" 
         },
+        {
+            "AttributeName": "ListID",
+            "AttributeType": "S"
+        }
 
     ],
     "ProvisionedThroughput": { 

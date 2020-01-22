@@ -34,14 +34,23 @@ extension DynamoModel {
     }
 
     private func _update(on database: DynamoDB) -> EventLoopFuture<Void> {
-        fatalError()
+        return Self.query(on: database)
+            .filter(\._$id == self.id!)
+            .set(self.inputFieldsWithChanges)
+            .action(.update)
+            .run()
     }
 
-    public static func find(id: IDValue) -> EventLoopFuture<Self?> {
-        fatalError()
+    public static func find(id: IDValue, on database: DynamoDB) -> EventLoopFuture<Self?> {
+        return Self.query(on: database)
+            .filter(\._$id == id)
+            .first()
     }
 
-    public static func delete(id: IDValue) -> EventLoopFuture<Void> {
-        fatalError()
+    public static func delete(id: IDValue, on database: DynamoDB) -> EventLoopFuture<Void> {
+        Self.query(on: database)
+            .filter(\._$id == id)
+            .action(.delete)
+            .run()
     }
 }

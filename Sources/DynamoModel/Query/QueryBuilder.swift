@@ -69,6 +69,58 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
+    func filter(_ filter: DynamoQuery.Filter) -> Self {
+        query.filters.append(filter)
+        return self
+    }
+
+    @discardableResult
+    func filter(_ filter: DynamoModelValueFilter<Model>) -> Self {
+        self.filter(
+            .field(filter.key, filter.method, filter.value)
+        )
+    }
+
+
+    @discardableResult
+    public func filter<Value>(
+        _ field: Field<Value>,
+        _ method: DynamoQuery.Filter.Method,
+        _ value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let attribute = try! DynamoConverter().convertToAttribute(value)
+        return self.filter(.field(field.key, method, .attribute(attribute)))
+    }
+
+    @discardableResult
+    public func filter<Value>(
+        _ field: KeyPath<Model, Field<Value>>,
+        _ method: DynamoQuery.Filter.Method,
+        _ value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let attribute = try! DynamoConverter().convertToAttribute(value)
+        return self.filter(.field(Model.key(for: field), method, .attribute(attribute)))
+    }
+
+    @discardableResult
+    public func filter<Value, Field>(
+        _ field: KeyPath<Model, Field>,
+        _ method: DynamoQuery.Filter.Method,
+        _ value: Value
+    ) -> Self
+        where Field: FieldRepresentible, Field.Value == Value
+    {
+        let attribute = try! DynamoConverter().convertToAttribute(value)
+        query.filters.append(.field(Model.key(for: field), method, .attribute(attribute)))
+        return self
+    }
+
+
+    @discardableResult
     internal func action(_ action: DynamoQuery.Action) -> Self {
         query.action = action
         return self
@@ -132,5 +184,31 @@ extension DynamoQueryBuilder {
     /// Runs the query and ignores results.
     public func run() -> EventLoopFuture<Void> {
         self.run({ _ in })
+    }
+}
+
+// MARK: - Field Value Filters
+
+public func == <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> DynamoModelValueFilter<Model>
+        where Model: DynamoModel, Field: FieldRepresentible {
+            .init(lhs, .equal, rhs)
+}
+
+public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
+
+    let key: String
+    let method: DynamoQuery.Filter.Method
+    let value: DynamoQuery.Value
+
+    init<Field>(
+        _ lhs: KeyPath<Model, Field>,
+        _ method: DynamoQuery.Filter.Method,
+        _ value: Field.Value
+    )
+        where Field: FieldRepresentible
+    {
+        self.key = Model.init()[keyPath: lhs].field.key
+        self.method = method
+        self.value = .attribute(try! DynamoConverter().convertToAttribute(value))
     }
 }

@@ -40,7 +40,7 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
     }
 
     // The field used to delegate some responsibilities to.
-    public let field: Field<Value>
+    public let field: Field<Value?>
 
     // Whether the item / id exists in the database.
     public var exists: Bool
@@ -52,7 +52,7 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
     var cachedOutput: DatabaseOutput?
 
     // The value exposed to the user, delegated to our `field`.
-    public var wrappedValue: Value {
+    public var wrappedValue: Value? {
         get { self.field.wrappedValue }
         set { self.field.wrappedValue = newValue }
     }

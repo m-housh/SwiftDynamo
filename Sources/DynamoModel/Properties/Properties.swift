@@ -78,6 +78,8 @@ protocol AnyID: AnyField {
 
     /// Whether the id exists in the database.
     var exists: Bool { get set }
+
+    var cachedOutput: DatabaseOutput? { get set }
 }
 
 // Delegate responsibilities to the field.
@@ -99,9 +101,23 @@ extension AnyField where Self: FieldRepresentible {
 
 extension AnyModel {
 
+    /// Whether any fields have been set / modified on a model.
+    var hasChanges: Bool {
+        return inputFieldsWithChanges.count > 0
+    }
+
+    /// Exposes only fields with changes.
+    var inputFieldsWithChanges: [AnyField] {
+        inputFields.filter { $0.inputValue != nil }
+    }
+
     /// Exposes fields for database query operatiions.
     var inputFields: [AnyField] {
-        fields.map { $0.1 }
+        fields
+            .map { keyAndValue in
+                let (_, field) = keyAndValue
+                return field
+            }
     }
 
     /// Returns all the fields attached / declared on a model. Along with their label.

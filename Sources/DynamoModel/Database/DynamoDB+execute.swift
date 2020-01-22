@@ -23,9 +23,18 @@ extension DynamoDB {
         switch query.action {
         case .read: return _read(query, onResult: callback)
         case .create: return _create(query, onResult: callback)
-        default:
-            fatalError()
+        case .update: return _update(query, onResult: callback)
+        case .delete: return _delete(query)
+//        default:
+//            fatalError()
         }
+    }
+
+    private func _delete(
+        _ query: DynamoQuery
+    ) -> EventLoopFuture<Void> {
+        self.batchWriteItem(.deleteRequest(from: query))
+            .map { _ in }
     }
 
     // run a read query.
@@ -64,6 +73,18 @@ extension DynamoDB {
             .map { output in
                 callback(.init(database: self, output: .dictionary(putItemInput.item)))
         }
+    }
+
+    // update a single item in the database
+    private func _update(
+        _ query: DynamoQuery,
+        onResult callback: @escaping (DatabaseOutput) -> ()
+    ) -> EventLoopFuture<Void> {
+        let updateItemInput = DynamoDB.UpdateItemInput.from(query)
+        return self.updateItem(updateItemInput)
+            .map { output in
+                callback(.init(database: self, output: .dictionary(output.attributes ?? [:])))
+            }
     }
 }
 

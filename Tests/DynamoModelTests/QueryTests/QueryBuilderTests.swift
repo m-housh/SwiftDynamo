@@ -13,6 +13,48 @@ final class QueryBuilderTests: XCTestCase {
 
     let database = DynamoDB.testing
 
+    func testSetOptions() {
+        let builder = TestModel
+            .query(on: database)
+            .set(.limit(1))
+            .set(.consistentRead(true))
+            .set(.exclusiveStartKey(["foo": .init(s: "bar")]))
+            .set(.expressionAttributeNames(["bar": "boom"]))
+            .set(.expressionAttributeValues(["bar": .init(s: "bing")]))
+            .set(.filterExpression("filtering"))
+            .set(.indexName("index"))
+            .set(.keyConditionExpression("key-condition"))
+            .set(.keyConditions(["foo": .init(comparisonOperator: .eq)]))
+            .set(.projectionExpression("project"))
+            .set(.queryFilter(["foo": .init(comparisonOperator: .eq)]))
+            .set(.returnConsumedCapacity(.none))
+            .set(.scanIndexForward(true))
+            .set(.select(.allAttributes))
+            .set(.conditionalOperator(.and))
+            .set(.conditionExpression("boom"))
+            .set(.returnItemCollectionMetrics(.size))
+
+        let options = builder.query.optionsContainer
+
+        XCTAssertEqual(options.limit!, 1)
+        XCTAssertEqual(options.consistentRead!, true)
+        XCTAssertEqual(options.exclusiveStartKey!["foo"]!.s, "bar" )
+        XCTAssertEqual(options.expressionAttributeNames!["bar"], "boom")
+        XCTAssertEqual(options.expressionAttributeValues!["bar"]!.s, "bing")
+        XCTAssertEqual(options.filterExpression!, "filtering")
+        XCTAssertEqual(options.indexName!, "index")
+        XCTAssertEqual(options.keyConditionExpression!, "key-condition")
+        XCTAssertEqual(options.keyConditions!["foo"]!.comparisonOperator, .eq)
+        XCTAssertEqual(options.projectionExpression!, "project")
+        XCTAssertEqual(options.queryFilter!["foo"]?.comparisonOperator, .eq)
+        XCTAssertEqual(options.returnConsumedCapacity!, .none)
+        XCTAssertEqual(options.scanIndexForward!, true)
+        XCTAssertEqual(options.select!, .allAttributes)
+        XCTAssertEqual(options.conditionalOperator!, .and)
+        XCTAssertEqual(options.conditionExpression!, "boom")
+        XCTAssertEqual(options.returnItemCollectionMetrics!, .size)
+    }
+
     func testQueryMethods() {
         let builder = TestModel
             .query(on: .testing)
@@ -45,14 +87,13 @@ final class QueryBuilderTests: XCTestCase {
             .query(on: database)
             .first()
             .wait()
-        
+
         XCTAssertNotNil(model)
     }
 
     func testCreate() throws {
         do {
             let model = TestModel()
-            model.sortKey = "list"
             model.completed = false
             model.title = "Test Create"
             model.order = 2
@@ -62,6 +103,42 @@ final class QueryBuilderTests: XCTestCase {
             XCTAssertEqual(saved.title, "Test Create")
             XCTAssertFalse(saved.completed)
             XCTAssertEqual(saved.order, 2)
+        } catch {
+            print("error: \(error)")
+            XCTFail()
+        }
+    }
+
+    func testUpdate() throws {
+        do {
+            let model = try TestModel.query(on: database).first().wait()!
+            model.title = "Updated"
+
+            let saved = try model.save(on: database).wait()
+            XCTAssertEqual(saved.title, "Updated")
+        } catch {
+            print("error: \(error)")
+            XCTFail()
+        }
+    }
+
+    func testFindID() throws {
+        do {
+            let model = try TestModel.query(on: database).first().wait()!
+            let fetched = try TestModel.find(id: model.id!, on: database).wait()!
+            XCTAssertEqual(model, fetched)
+        } catch {
+            print("error: \(error)")
+            XCTFail()
+        }
+    }
+
+    func testDeleteID() throws {
+        do {
+            let models = try TestModel.query(on: database).all().wait()
+            try TestModel.delete(id: models[0].id!, on: database).wait()
+            let after = try TestModel.query(on: database).all().wait()
+            XCTAssertEqual(models.count - 1, after.count)
         } catch {
             print("error: \(error)")
             XCTFail()

@@ -27,7 +27,7 @@ public protocol DynamoModel: AnyModel {
     associatedtype IDValue: Codable, Hashable
 
     /// The model's unique identifier.
-    var id: IDValue { get set }
+    var id: IDValue? { get set }
 }
 
 extension AnyModel {
@@ -164,10 +164,10 @@ extension AnyModel {
 
     /// Finds / references the id field on a model.
     var anyID: AnyID {
-        guard let id = Mirror(reflecting: self).descendant("_id") as? AnyID else {
+        guard let id = Mirror(reflecting: self).descendant("_id") else {
             fatalError("id property must be declared using @ID")
         }
-        return id
+        return id as! AnyID
     }
 
 }
