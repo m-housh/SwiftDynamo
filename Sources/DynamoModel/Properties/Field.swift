@@ -83,6 +83,13 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
             self.wrappedValue = try container.decode(Value.self)
         }
     }
+
+    public func attributeValue() throws -> DynamoDB.AttributeValue? {
+        guard inputValue != nil else {
+            return nil
+        }
+        return try DynamoConverter().convertToAttribute(wrappedValue)
+    }
 }
 
 private protocol _Optional {

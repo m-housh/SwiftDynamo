@@ -65,7 +65,7 @@ extension DynamoSchema {
 extension DynamoSchema {
 
     /// A convenience for a sort key initialized in a schema.
-    public enum SortKey {
+    public enum SortKey: CustomStringConvertible, AnySortKey {
 
         case string(key: String, value: String)
         case int(key: String, value: Int)
@@ -76,5 +76,18 @@ extension DynamoSchema {
             case let .int(key, _): return key
             }
         }
+
+        public var description: String {
+            switch self {
+            case let .string(_, string): return string
+            case let .int(_, int): return int.description
+            }
+        }
+
+        public var sortKeyValue: String? { description }
+
+//        public var inputValue: DynamoQuery.Value? {
+//            .bind(self)
+//        }
     }
 }

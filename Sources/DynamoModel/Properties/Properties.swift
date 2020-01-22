@@ -41,12 +41,14 @@ extension AnyProperty where Self: FieldRepresentible {
 public protocol AnyField: AnyProperty {
     var key: String { get }
     var inputValue: DynamoQuery.Value? { get set }
+    func attributeValue() throws -> DynamoDB.AttributeValue?
 }
 
 /// A type that can be used as a sort key for a `DynamoSchema`.
 public protocol AnySortKey {
     var key: String { get }
-//    var inputValue: DynamoQuery.SortKeyValue? { get }
+    var sortKeyValue: String? { get }
+//    var inputValue: DynamoQuery.Value? { get }
 }
 
 /// A type that can expose a concrete `Field`.
@@ -72,9 +74,17 @@ extension AnyField where Self: FieldRepresentible {
         get { self.field.inputValue }
         set { self.field.inputValue = newValue }
     }
+
+    public func attributeValue() throws -> DynamoDB.AttributeValue? {
+        try self.field.attributeValue()
+    }
 }
 
 extension AnyModel {
+
+    var inputFields: [AnyField] {
+        fields.map { $0.1 }
+    }
 
     /// Returns all the fields attached / declared on a model.
     var fields: [(String, AnyField)] {

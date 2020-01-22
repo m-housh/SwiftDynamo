@@ -8,36 +8,48 @@
 import Foundation
 import DynamoModel
 import DynamoDB
+import AWSSDKSwiftCore
 
 final class TestModel: DynamoModel, Equatable, Codable {
 
-    static var schema: DynamoSchema = "TestDynamoModel"
+    static var schema: DynamoSchema = "TodoTest"
 
-    @ID(key: "TestID")
+    @ID(key: "TodoID")
     var id: UUID
 
-    @SortKey(key: "TestSortID")
+    @SortKey(key: "ListID")
     var sortKey: String
 
-    @Field(key: "TestString")
-    var string: String
+    @Field(key: "Title")
+    var title: String
 
-    @Field(key: "TestInt")
-    var int: Int
+    @Field(key: "Order")
+    var order: Int?
+
+    @Field(key: "Completed")
+    var completed: Bool
 
     init() { }
 
     static func ==(lhs: TestModel, rhs: TestModel) -> Bool {
         lhs.id == rhs.id &&
             lhs.sortKey == rhs.sortKey &&
-            lhs.string == rhs.string &&
-            lhs.int == rhs.int
+            lhs.title == rhs.title &&
+            lhs.order == rhs.order
     }
 }
 
 extension DynamoDB {
 
     static var testing: DynamoDB {
-        .init()
+        .init(
+            accessKeyId: nil,
+            secretAccessKey: nil,
+            sessionToken: nil,
+            region: Region(rawValue: "us-east-2"),
+            endpoint: "http://localhost:8000",
+            middlewares: [],
+            eventLoopGroupProvider: .useAWSClientShared
+        )
     }
 }

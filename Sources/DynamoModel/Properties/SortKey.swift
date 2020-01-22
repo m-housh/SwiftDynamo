@@ -26,6 +26,10 @@ public final class SortKey<Value>: AnyField, FieldRepresentible, AnySortKey wher
     // We delegate responsibilities to the field.
     public var projectedValue: SortKey<Value> { self }
 
+    public var sortKeyValue: String? {
+        "\(wrappedValue)"
+    }
+
     /// Create a new instance.
     ///
     /// - parameters:

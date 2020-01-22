@@ -19,9 +19,10 @@ public protocol DynamoModel: AnyModel {
     var id: IDValue { get set }
 }
 
-// MARK: - Codable
 extension AnyModel {
 
+    // MARK: - Codable
+    
     public init(from decoder: Decoder) throws {
         self.init()
         let container = try decoder.container(keyedBy: _DynamoCodingKey.self)
@@ -108,6 +109,7 @@ private struct _ModelDecoder: Decoder, SingleValueDecodingContainer {
 
 extension AnyModel {
 
+    // this can probably go away.
     var input: [String: DynamoQuery.Value] {
         var input = [String: DynamoQuery.Value]()
         for (_, field) in self.fields {
@@ -136,24 +138,19 @@ extension AnyModel {
     public static func key<Field>(for field: KeyPath<Self, Field>) -> String where Field: FieldRepresentible {
         Self.init()[keyPath: field].field.key
     }
+
+    var anyID: AnyID {
+        guard let id = Mirror(reflecting: self).descendant("_id") as? AnyID else {
+            fatalError("id property must be declared using @ID")
+        }
+        return id
+    }
+
 }
 
 extension DynamoModel {
-
-    static func query(on database: DynamoDB) -> DynamoQueryBuilder<Self> {
-        DynamoQueryBuilder(database: database)
-    }
-
-    func save(on database: DynamoDB) -> EventLoopFuture<Self> {
-        fatalError()
-    }
-
-    static func find(id: IDValue) -> EventLoopFuture<Self?> {
-        fatalError()
-    }
-
-    static func delete(id: IDValue) -> EventLoopFuture<Void> {
-        fatalError()
+    var _$id: ID<IDValue> {
+        self.anyID as! ID<IDValue>
     }
 }
 
