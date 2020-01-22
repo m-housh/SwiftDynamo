@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  DynamoQuery.swift
 //  
 //
 //  Created by Michael Housh on 1/16/20.
@@ -8,10 +8,6 @@
 import Foundation
 import DynamoDB
 import NIO
-
-public protocol DynamoFetchQueryRepresentible {
-    var fetchQuery: DynamoDB.QueryInput { get }
-}
 
 public struct DynamoQuery {
 
@@ -34,12 +30,22 @@ public struct DynamoQuery {
     // common `aws` options that can be set.
     public var options: [Option]
 
+    var optionsContainer: OptionsContainer {
+        var options = OptionsContainer()
+        _ = self.options.map { $0.setOption(&options) }
+        if let sortKey = self.sortKey, let sortKeyValue = sortKey.sortKeyValue {
+            options.expressionAttributeValues = [":sortKey": .init(s: sortKeyValue)]
+            options.keyConditionExpression = "\(sortKey.key) = :sortKey"
+        }
+        return options
+    }
+
     public init(schema: DynamoSchema) {
         self.action = .read
         self.schema = schema
         self.fields = []
         self.input = []
-        self.sortKey = nil
+        self.sortKey = schema.sortKey
         self.options = []
     }
 }
@@ -60,8 +66,10 @@ extension DynamoQuery {
         case dictionary([String: Value])
     }
 
-    public enum SortKey {
-        case bind(CustomStringConvertible)
+    public struct SortKey: AnySortKey {
+        public let key: String
+        public let value: String
+        public var sortKeyValue: String? { value }
     }
 
     public enum Option {
@@ -80,6 +88,8 @@ extension DynamoQuery {
         case scanIndexForward(Bool)
         case select(DynamoDB.Select)
         case conditionalOperator(DynamoDB.ConditionalOperator)
+        case conditionExpression(String)
+        case returnItemCollectionMetrics(DynamoDB.ReturnItemCollectionMetrics)
 
         func setOption(_ options: inout OptionsContainer) {
             switch self {
@@ -98,28 +108,32 @@ extension DynamoQuery {
             case let .scanIndexForward(bool): options.scanIndexForward = bool
             case let .select(select): options.select = select
             case let .conditionalOperator(_operator): options.conditionalOperator = _operator
+            case let .conditionExpression(string): options.conditionExpression = string
+            case let .returnItemCollectionMetrics(metrics): options.returnItemCollectionMetrics = metrics
             }
         }
 
     }
-}
 
-struct OptionsContainer {
-    var limit: Int? = nil
-    var consistentRead: Bool? = nil
-    var exclusiveStartKey: [String: DynamoDB.AttributeValue]? = nil
-    var expressionAttributeNames: [String: String]? = nil
-    var expressionAttributeValues: [String: DynamoDB.AttributeValue]? = nil
-    var filterExpression: String? = nil
-    var indexName: String? = nil
-    var keyConditionExpression: String? = nil
-    var keyConditions: [String: DynamoDB.Condition]? = nil
-    var projectionExpression: String? = nil
-    var queryFilter: [String: DynamoDB.Condition]? = nil
-    var returnConsumedCapacity: DynamoDB.ReturnConsumedCapacity? = nil
-    var scanIndexForward: Bool? = nil
-    var select: DynamoDB.Select? = nil
-    var conditionalOperator: DynamoDB.ConditionalOperator? = nil
+    struct OptionsContainer {
+        var limit: Int? = nil
+        var consistentRead: Bool? = nil
+        var exclusiveStartKey: [String: DynamoDB.AttributeValue]? = nil
+        var expressionAttributeNames: [String: String]? = nil
+        var expressionAttributeValues: [String: DynamoDB.AttributeValue]? = nil
+        var filterExpression: String? = nil
+        var indexName: String? = nil
+        var keyConditionExpression: String? = nil
+        var keyConditions: [String: DynamoDB.Condition]? = nil
+        var projectionExpression: String? = nil
+        var queryFilter: [String: DynamoDB.Condition]? = nil
+        var returnConsumedCapacity: DynamoDB.ReturnConsumedCapacity? = nil
+        var scanIndexForward: Bool? = nil
+        var select: DynamoDB.Select? = nil
+        var conditionalOperator: DynamoDB.ConditionalOperator? = nil
+        var conditionExpression: String? = nil
+        var returnItemCollectionMetrics: DynamoDB.ReturnItemCollectionMetrics? = nil
+    }
 }
 
 /*

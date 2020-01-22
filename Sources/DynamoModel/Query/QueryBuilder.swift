@@ -9,6 +9,9 @@ import Foundation
 import DynamoDB
 import NIO
 
+// MARK: - TODO
+//  add partition key method.
+
 public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
     public var query: DynamoQuery
@@ -28,30 +31,17 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         query.sortKey = Model()[keyPath: key]
         return self
     }
-//
-//    @discardableResult
-//    func sortKey(_ key: String) -> Self {
-//        query.sortKey = DynamoSchema.SortKey.string(key)
-//        return self
-//    }
+
+    @discardableResult
+    public func sortKey(key: String, to value: CustomStringConvertible) -> Self {
+        query.sortKey = DynamoQuery.SortKey(key: key, value: value.description)
+        return self
+    }
 
     @discardableResult
     public func limit(_ limit: Int) -> Self {
         return set(.limit(limit))
     }
-
-//    @discardableResult
-//    public func limitAttributes<Field>(to attributes: KeyPath<Model, Field>...) -> Self where Field: FieldRepresentible {
-//        query.fields = []
-//        query.fields += attributes.map { Model.key(for: $0) }
-//        return self
-//    }
-//
-//    @discardableResult
-//    public func index(_ index: String) -> Self {
-//        query.indexName = index
-//        return self
-//    }
 
     @discardableResult
     public func set(_ data: [String: DynamoQuery.Value]) -> Self {

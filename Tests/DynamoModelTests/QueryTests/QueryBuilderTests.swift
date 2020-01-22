@@ -29,7 +29,10 @@ final class QueryBuilderTests: XCTestCase {
 
     func testFetchAll() throws {
         do {
-            let models = try TestModel.query(on: .testing).all().wait()
+            let models = try TestModel
+                .query(on: database)
+                .all()
+                .wait()
             XCTAssert(models.count > 0)
         } catch {
             print("error: \(error)")
