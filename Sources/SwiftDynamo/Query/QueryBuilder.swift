@@ -121,6 +121,21 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         query.action = action
         return self
     }
+
+    public func update() -> EventLoopFuture<Void> {
+        query.action = .update
+        return self.run()
+    }
+
+    public func create() -> EventLoopFuture<Void> {
+        query.action = .create
+        return self.run()
+    }
+
+    public func delete() -> EventLoopFuture<Void> {
+        query.action = .delete
+        return self.run()
+    }
 }
 
 extension DynamoQueryBuilder {

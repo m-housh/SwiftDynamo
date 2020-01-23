@@ -47,6 +47,11 @@ public struct DynamoTodoStore: TodoStore {
         todo.save(on: dynamoDB)
     }
 
+    public func patchTodo(_ todo: PatchTodo) -> EventLoopFuture<TodoModel> {
+        PatchTodo
+            .query(on: dynamoDB)
+    }
+
     public func deleteTodo(id: UUID) -> EventLoopFuture<Void> {
         TodoModel.delete(id: id, on: dynamoDB)
     }

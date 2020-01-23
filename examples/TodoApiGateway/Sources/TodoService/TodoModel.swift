@@ -38,3 +38,28 @@ public final class TodoModel: DynamoModel {
         self.order = order
     }
 }
+
+public final class PatchTodo: DynamoModel {
+
+    public static var schema: DynamoSchema {
+        DynamoSchema(
+            "SwiftLambdaTodo",
+            partitionKey: .init(key: "ListID", default: "list")
+        )
+    }
+
+    @ID(key: "TodoID", generatedBy: .random)
+    public var id: UUID?
+
+    @Field(key: "Title")
+    public var title: String?
+
+    @Field(key: "Order")
+    public var order: Int?
+
+    @Field(key: "Completed")
+    public var completed: Bool?
+
+    public init() { }
+
+}
