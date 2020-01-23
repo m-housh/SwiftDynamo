@@ -21,7 +21,7 @@ build_lambda:
 		--volume "$(PWD):/src" \
 		--workdir "/src" \
 		$(BUILDER_NAME) \
-		swift build -c release
+		swift build -c release --disable-package-manifest-caching
 
 package_lambda: build_lambda
 	cp .build/release/$(EXECUTABLE) ./bootstrap

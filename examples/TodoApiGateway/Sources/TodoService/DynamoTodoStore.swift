@@ -48,10 +48,19 @@ public struct DynamoTodoStore: TodoStore {
     }
 
     public func patchTodo(_ todo: PatchTodo) -> EventLoopFuture<TodoModel> {
-        PatchTodo
-            .query(on: dynamoDB)
-            .set(todo.input)
-            .update()
+        let model = TodoModel()
+        model.id = todo.id
+        if let completed = todo.completed {
+            model.completed = completed
+        }
+        if let title = todo.title {
+            model.title = title
+        }
+        if let order = todo.order {
+            model.order = order
+        }
+        return model.update(on: dynamoDB)
+
     }
 
     public func deleteTodo(id: UUID) -> EventLoopFuture<Void> {
