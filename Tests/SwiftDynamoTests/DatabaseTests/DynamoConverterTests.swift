@@ -7,7 +7,7 @@
 
 import XCTest
 import DynamoDB
-@testable import DynamoModel
+@testable import SwiftDynamo
 
 
 final class DynamoConverterTests: XCTestCase {

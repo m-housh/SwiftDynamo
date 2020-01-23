@@ -10,10 +10,6 @@ import DynamoDB
 import NIO
 
 public struct DynamoQuery {
-
-    // MARK: - TODO
-    //  these probably only need set when queries are limited instead of every
-    //  query, as the default behavior is to return all the fields in a table.
     
     // fields that get returned with the query.
     // will default to all the fields found on a model.
@@ -25,59 +21,40 @@ public struct DynamoQuery {
     // the schema we are interacting with.
     public var schema: DynamoSchema
 
-    // an optional sort key for the table.
-    public var sortKey: AnySortKey?
-
-    public var partitionKey: PartitionKey?
-
     // values to be saved to the database.
     public var input: [Value]
+
+    // an optional sort key that get's set on the query.
+    public var sortKey: (String, Value)? {
+        get { optionsContainer.sortKey }
+        set {
+            if let value = newValue {
+                options.append(.sortKey(value.0, value.1))
+            }
+        }
+    }
+
+    // an optional partition key that gets set on the query.
+    public var partitionKey: (String, Value)? {
+        get { optionsContainer.partitionKey }
+        set {
+            if let value = newValue {
+                options.append(.partitionKey(value.0, value.1))
+            }
+        }
+    }
 
     // common `aws` options that can be set.
     public var options: [Option]
 
+    // filters that get set on the query.
     public var filters: [Filter]
-
-    // MARK: - TODO
-    //      Have `optionsContainer` specialized for the type of action the query
-    //      taking, as setting values `expressionAttributeValues` and
-    //      `keyConditionExpression` causes some queries to fail, however
-    //      we should have a way to tell if a user has specifically set an
-    //      option.
-
+    
     // create an options container from current state.
     var optionsContainer: OptionsContainer {
         // create the container and set the default options.
-        var options = self.options
+        self.options
             .reduce(into: OptionsContainer()) { $1.setOption(&$0) }
-
-        // short circuit if user has already set key condition options.
-        guard options.keyConditionExpression == nil else {
-            return options
-        }
-
-        // parse and set any sort key values.
-        if let sortKey = self.sortKey, let sortKeyValue = sortKey.sortKeyValue {
-            options.expressionAttributeValues = [":sortKey": .init(s: sortKeyValue)]
-            options.keyConditionExpression = "\(sortKey.key) = :sortKey"
-        }
-
-        if let partitionKey = self.partitionKey, let partitionKeyValue = partitionKey.value {
-            if options.expressionAttributeValues == nil {
-                options.expressionAttributeValues = [":partitionKey": .init(s: partitionKeyValue.description)]
-            } else {
-                options.expressionAttributeValues![":partitionKey"] = .init(s: partitionKeyValue.description)
-            }
-
-            if options.keyConditionExpression == nil {
-                options.keyConditionExpression = "\(partitionKey.key) = :partitionKey"
-            } else {
-                options.keyConditionExpression! += ", \(partitionKey.key) = :partitionKey"
-            }
-        }
-
-        // return the options for our current state.
-        return options
     }
 
     public init(schema: DynamoSchema) {
@@ -85,10 +62,16 @@ public struct DynamoQuery {
         self.schema = schema
         self.fields = []
         self.input = []
-        self.sortKey = schema.sortKey
-        self.partitionKey = schema.partitionKey
         self.options = []
         self.filters = []
+
+        if let partitionKey = schema.partitionKey, let value = partitionKey.value {
+            self.partitionKey = (partitionKey.key, .bind(value.description))
+        }
+
+        if let sortKey = schema.sortKey, let value = sortKey.value {
+            self.sortKey = (sortKey.key, .bind(value.description))
+        }
     }
 }
 
@@ -102,13 +85,6 @@ extension DynamoQuery {
         case delete
     }
 
-    // MARK: - TODO
-    //      move `bind` to it's own enum, as it's only used as a marker.
-    //      all the values in the `Value` enum need to be able to represent
-    //      themselves as a `DynamoDB.AttributeValue` and `Encodable` gives
-    //      warnings because it's not a concrete type, so we can't convert binds
-    //      on the fly.
-
     /// Value types that can be passed to the database.
     public enum Value {
 
@@ -117,22 +93,18 @@ extension DynamoQuery {
         case dictionary([String: Value])
     }
 
-    // A sort key for a table, this may need re-thought out during
-    // usage of partition keys.
-    public struct SortKey: AnySortKey {
-        public let key: String
-        public let value: String
-        public var sortKeyValue: String? { value }
-    }
-
+    // MARK: - Options
 
     public enum Option {
-        // Holds `aws` specific options for query inputs.  Not all options
+        // Holds primarily `aws` specific options for query inputs.  Not all options
         // are valid for all types of queries, but we will allow users to
         // set them and only use what's valid for a specific input.
         //
         // These are items that aren't used as commonly / required or have an
         // abstraction built around them to make them more meaningful.
+
+        case sortKey(String, Value)
+        case partitionKey(String, Value)
         case limit(Int)
         case consistentRead(Bool)
         case exclusiveStartKey([String: DynamoDB.AttributeValue])
@@ -171,6 +143,18 @@ extension DynamoQuery {
             case let .conditionalOperator(_operator): options.conditionalOperator = _operator
             case let .conditionExpression(string): options.conditionExpression = string
             case let .returnItemCollectionMetrics(metrics): options.returnItemCollectionMetrics = metrics
+            case let .sortKey(key, value):
+                options.sortKey = (key, value)
+                let attribute = try! value.attributeValue()
+                let expression = ":sortKey"
+                options.setExpressionAttribute(expression, attribute)
+                options.addKeyConditionExpression(key, expression)
+            case let .partitionKey(key, value):
+                options.partitionKey = (key, value)
+                let attribute = try! value.attributeValue()
+                let expression = ":partitionID"
+                options.setExpressionAttribute(expression, attribute)
+                options.addKeyConditionExpression(key, expression)
             }
         }
 
@@ -195,7 +179,11 @@ extension DynamoQuery {
         var conditionalOperator: DynamoDB.ConditionalOperator? = nil
         var conditionExpression: String? = nil
         var returnItemCollectionMetrics: DynamoDB.ReturnItemCollectionMetrics? = nil
+        var sortKey: (String, Value)? = nil
+        var partitionKey: (String, Value)? = nil
     }
+
+    // MARK: - Filter
 
     public enum Filter {
 
@@ -217,6 +205,7 @@ extension DynamoQuery {
     }
 }
 
+// MARK: - Helpers
 protocol AnyBindable {
 
     func convertToAttribute() throws -> DynamoDB.AttributeValue
@@ -234,5 +223,24 @@ extension Optional: AnyBindable where Wrapped: Encodable {
             return .init(null: true)
         }
         return try DynamoConverter().convertToAttribute(strongSelf)
+    }
+}
+
+extension DynamoQuery.OptionsContainer {
+
+    mutating func setExpressionAttribute(_ expression: String, _ value: DynamoDB.AttributeValue) {
+        if expressionAttributeValues == nil {
+            self.expressionAttributeValues = [expression: value]
+        } else {
+            self.expressionAttributeValues![expression] = value
+        }
+    }
+
+    mutating func addKeyConditionExpression(_ key: String, _ expression: String) {
+        if keyConditionExpression == nil {
+            keyConditionExpression = "\(key) = \(expression)"
+        } else {
+            keyConditionExpression! += " and \(key) = \(expression)"
+        }
     }
 }

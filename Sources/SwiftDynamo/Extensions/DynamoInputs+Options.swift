@@ -48,8 +48,8 @@ extension DynamoDB.PutItemInput {
         var item = try! query.input[0].convertToAttributes()
 
         // check for a default partition key and add it.
-        if let partitionKey = query.partitionKey, let partitionValue = partitionKey.value {
-            item[partitionKey.key] = .init(s: partitionValue.description)
+        if let partitionKey = query.partitionKey {
+            item[partitionKey.0] = try! partitionKey.1.attributeValue()
         }
 
         return .init(
@@ -180,8 +180,8 @@ extension DynamoQuery {
         }
 
         // add partition key if it's available.
-        if let partitionKey = self.partitionKey, let partitionValue = partitionKey.value {
-            key[partitionKey.key] = .init(s: partitionValue.description)
+        if let partitionKey = self.partitionKey {
+            key[partitionKey.0] = try! partitionKey.1.attributeValue()
         }
 
         return key

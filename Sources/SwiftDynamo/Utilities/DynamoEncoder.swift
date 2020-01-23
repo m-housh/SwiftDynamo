@@ -212,7 +212,7 @@ fileprivate struct _DynamoStorage {
 /// The actual encoder used to encode items to `[String: DynamoDB.AttributeValue]`.
 /// This will not encode an array of encodables, so they must be encoded seperately.  This is due to the way array's encoded.
 /// The workaround is to have a method on the top encoder that just maps arrays to this encoder.  See, `DynamoEncoder.encode(_:)`
-fileprivate class _DynamoEncoder: Encoder {
+internal class _DynamoEncoder: Encoder {
 
     /// - SeeAlso: `Encoder`
     var userInfo: [CodingUserInfoKey : Any] = [:]
@@ -222,7 +222,7 @@ fileprivate class _DynamoEncoder: Encoder {
     var codingPath: [CodingKey]
 
     /// Our container stack.
-    var storage: _DynamoStorage
+    fileprivate var storage: _DynamoStorage
 
     /// Create a new encoder at the given coding path.
     ///

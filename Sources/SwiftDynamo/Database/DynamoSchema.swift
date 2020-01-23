@@ -24,22 +24,14 @@ public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
 
     public var partitionKey: PartitionKey?
 
-    /// Create a new instance.
-    ///
-    /// - parameters:
-    ///     - tableName: The table name.
-    ///     - anySortKey: An optional sort key to use for this instance, defaults to `nil`.
-//    public init(_ tableName: String, with anySortKey: AnySortKey? = nil) {
-//        self.tableName = tableName
-//        self.sortKey = anySortKey
-//    }
 
     /// Create a new instance using the convenience `SortKey`.
     ///
     /// - parameters:
     ///     - tableName: The table name.
-    ///     - sortKey: A `SortKey` to use for this instance.
-    public init(_ tableName: String, sortKey: SortKey? = nil, partitionKey: PartitionKey) {
+    ///     - partitionKey: A partition key to use for the table.
+    ///     - sortKey: A sort key to use for the table.
+    public init(_ tableName: String, partitionKey: PartitionKey? = nil, sortKey: SortKey? = nil) {
         self.tableName = tableName
         self.sortKey = sortKey
         self.partitionKey = partitionKey
@@ -65,6 +57,7 @@ public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
 extension DynamoSchema {
     public static func == (lhs: DynamoSchema, rhs: DynamoSchema) -> Bool {
         lhs.tableName == rhs.tableName &&
+            lhs.partitionKey?.key == rhs.partitionKey?.key &&
             lhs.sortKey?.key == rhs.sortKey?.key
     }
 }
@@ -73,40 +66,25 @@ extension DynamoSchema {
 extension DynamoSchema {
 
     /// A convenience for a sort key initialized in a schema.
-    public enum SortKey: CustomStringConvertible, AnySortKey {
+    public struct SortKey {
 
-        case string(key: String, value: String)
-        case int(key: String, value: Int)
+        public let key: String
+        public var value: CustomStringConvertible?
 
-        public var key: String {
-            switch self {
-            case let .string(key, _): return key
-            case let .int(key, _): return key
-            }
+        public init(key: String, default value: CustomStringConvertible? = nil) {
+            self.key = key
+            self.value = value
         }
-
-        public var description: String {
-            switch self {
-            case let .string(_, string): return string
-            case let .int(_, int): return int.description
-            }
-        }
-
-        public var sortKeyValue: String? { description }
-
-//        public var inputValue: DynamoQuery.Value? {
-//            .bind(self)
-//        }
     }
-}
 
-public struct PartitionKey {
+    public struct PartitionKey {
 
-    public let key: String
-    public var value: CustomStringConvertible?
+        public let key: String
+        public var value: CustomStringConvertible?
 
-    public init(key: String, default value: CustomStringConvertible? = nil) {
-        self.key = key
-        self.value = value
+        public init(key: String, default value: CustomStringConvertible? = nil) {
+            self.key = key
+            self.value = value
+        }
     }
 }

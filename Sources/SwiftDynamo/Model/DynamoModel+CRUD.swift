@@ -11,10 +11,18 @@ import NIO
 
 extension DynamoModel {
 
+    /// Create a query for the model.
+    ///
+    /// - parameters:
+    ///     - database: The database to run the operation on.
     public static func query(on database: DynamoDB) -> DynamoQueryBuilder<Self> {
         DynamoQueryBuilder(database: database)
     }
 
+    /// Save or update a model.
+    ///
+    /// - parameters:
+    ///     - database: The database to run the operation on.
     public func save(on database: DynamoDB) -> EventLoopFuture<Self> {
         if !self._$id.exists {
             return self._create(on: database)

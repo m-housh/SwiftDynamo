@@ -52,14 +52,7 @@ public protocol AnyField: AnyProperty {
 }
 
 /// A type that can be used as a sort key for a `DynamoSchema`.
-public protocol AnySortKey {
-
-    /// The database key for the sort key.
-    var key: String { get }
-
-    /// The value for the sort key.
-    var sortKeyValue: String? { get }
-}
+public protocol AnySortKey: AnyField { }
 
 /// A type that can expose a concrete `Field`.
 public protocol FieldRepresentible {
@@ -129,34 +122,3 @@ extension AnyModel {
 
     }
 }
-
-// Used in encoding / decoding of models.
-enum _ModelCodingKey: CodingKey {
-
-    case string(String)
-    case int(Int)
-
-    var stringValue: String {
-        switch self {
-        case let .string(string): return string
-        case let .int(int): return int.description
-        }
-    }
-
-    var intValue: Int? {
-        switch self {
-        case let .string(string): return Int(string)
-        case let .int(int): return int
-        }
-    }
-
-    init?(stringValue: String) {
-        self = .string(stringValue)
-    }
-
-    init?(intValue: Int) {
-        self = .int(intValue)
-    }
-
-}
-

@@ -87,13 +87,3 @@ extension DynamoDB {
             }
     }
 }
-
-//extension DynamoQuery {
-//    private var _sortKey: (String, String)? {
-//        guard let sortKey = self.sortKey else { return nil }
-//        guard let value = sortKey.sortKeyValue else { return nil }
-//        return (sortKey.key, value)
-//    }
-//
-//}
-

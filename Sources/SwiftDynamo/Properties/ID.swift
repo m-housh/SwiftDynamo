@@ -45,6 +45,8 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
     // Whether the item / id exists in the database.
     public var exists: Bool
 
+    let type: IDType
+
     /// The id generator type.
     let generator: Generator
 
@@ -74,11 +76,12 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
     /// - parameters:
     ///     - key: The database key for the id.
     ///     - generator: The generator type for the id, will use the default for the `Value` if not supplied.
-    public init(key: String, generatedBy generator: Generator? = nil) {
+    public init(key: String, type: IDType = .partitionKey, generatedBy generator: Generator? = nil) {
         self.field = .init(key: key)
         self.generator = generator ?? Generator.default(for: Value.self)
         self.exists = false
         self.cachedOutput = nil
+        self.type = type
     }
 
     // Generate a value if applicable.
@@ -107,5 +110,11 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
     // Decode ourself, delegated to our `field`.
     public func decode(from decoder: Decoder) throws {
         try field.decode(from: decoder)
+    }
+
+    public enum IDType {
+        case partitionKey
+        case sortKey
+        case none
     }
 }

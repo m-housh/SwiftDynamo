@@ -7,7 +7,7 @@
 
 import XCTest
 import DynamoDB
-@testable import DynamoModel
+@testable import SwiftDynamo
 
 final class DynamoDecoderTests: XCTestCase {
 
@@ -15,6 +15,13 @@ final class DynamoDecoderTests: XCTestCase {
         let encoded = try JSONEncoder().encode(1)
         let decoded = try DynamoDecoder().decode(Int.self, from: encoded)
         XCTAssertEqual(decoded, 1)
+    }
+
+    func testOptionalDecoding() throws {
+        let optional: String? = nil
+        let encoded = try JSONEncoder().encode(optional)
+        let decoded = try DynamoDecoder().decode(String?.self, from: encoded)
+        XCTAssertNil(decoded)
     }
 
     func testSimpleDecoding() throws {

@@ -31,19 +31,25 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
-    public func sortKey(_ key: KeyPath<Model, SortKey<String>>) -> Self {
-        query.sortKey = Model()[keyPath: key]
-        return self
-    }
-
-    @discardableResult
     public func limit(_ limit: Int) -> Self {
         return setOption(.limit(limit))
     }
 
     @discardableResult
-    public func set(sortKey key: String, to value: CustomStringConvertible) -> Self {
-        query.sortKey = DynamoQuery.SortKey(key: key, value: value.description)
+    public func setSortKey(sortKey key: String, to value: Encodable) -> Self {
+        query.sortKey = (key, .bind(value))
+        return self
+    }
+
+    @discardableResult
+    public func setSortKey<Value>(_ sortKey: KeyPath<Model, SortKey<Value>>, to value: Value) -> Self {
+        query.sortKey = (Model.key(for: sortKey), .bind(value))
+        return self
+    }
+
+    @discardableResult
+    public func setPartitionKey(partitionKey key: String, to value: Encodable) -> Self {
+        query.partitionKey = (key, .bind(value))
         return self
     }
 
@@ -59,6 +65,8 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         return self
     }
 
+    // MARK: - Filter
+
     @discardableResult
     func filter(_ filter: DynamoQuery.Filter) -> Self {
         query.filters.append(filter)
@@ -71,7 +79,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
             .field(filter.key, filter.method, filter.value)
         )
     }
-
 
     @discardableResult
     public func filter<Value>(
@@ -107,6 +114,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         return self
     }
 
+    // MARK: - Actions
 
     @discardableResult
     internal func action(_ action: DynamoQuery.Action) -> Self {

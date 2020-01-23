@@ -144,13 +144,6 @@ extension AnyModel {
 
 extension AnyModel {
 
-    var sortKey: AnySortKey? {
-        return nil
-//        guard let sortKeyField = fields.first(where: { $0.1 as? AnySortKey != nil }) else {
-//            return Self.schema.sortKey
-//        }
-//        return sortKeyField.1 as? AnySortKey
-    }
 
     /// Get the database key for a given field.
     ///
@@ -179,4 +172,5 @@ extension DynamoModel {
     var _$id: ID<IDValue> {
         self.anyID as! ID<IDValue>
     }
+
 }

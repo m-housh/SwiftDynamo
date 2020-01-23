@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import DynamoModel
+import SwiftDynamo
 import DynamoDB
 import AWSSDKSwiftCore
 
