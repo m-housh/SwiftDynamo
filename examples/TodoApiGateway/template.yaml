@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+  Sample SAM Template for sam-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+
+  DynamoDbFailedLoginsTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: ListID
+        AttributeType: S
+      - AttributeName: TodoID
+        AttributeType: S
+      KeySchema:
+      - AttributeName: ListID
+        KeyType: HASH
+      - AttributeName: TodoID
+        KeyType: RANGE
+      TableName: "SwiftLambdaTodo"
+
+  APIGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: test
+      Cors:
+        AllowMethods: "'OPTIONS,GET,POST,DELETE,PATCH'"
+        AllowHeaders: "'Content-Type'"
+        AllowOrigin : "'*'"
+        AllowCredentials: "'*'"
+
+  TodoAPIGatewayListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda.zip
+      Handler: "list"
+      Runtime: provided
+      Layers:
+      - arn:aws:lambda:us-east-2:426836788079:layer:Swift:8
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName: "SwiftLambdaTodo"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref APIGateway
+            Path: /todos
+            Method: GET
+
+  TodoAPIGatewayCreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda.zip
+      Handler: "create"
+      Runtime: provided
+      Layers:
+      - arn:aws:lambda:us-east-2:426836788079:layer:Swift:8
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: "SwiftLambdaTodo"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref APIGateway
+            Path: /todos
+            Method: POST
+
+  TodoAPIGatewayGetTodo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda.zip
+      Handler: "getTodo"
+      Runtime: provided
+      Layers:
+      - arn:aws:lambda:us-east-2:426836788079:layer:Swift:8
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName: "SwiftLambdaTodo"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref APIGateway
+            Path: /todos/{id}
+            Method: GET
+
+  TodoAPIGatewayDeleteTodo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda.zip
+      Handler: "deleteTodo"
+      Runtime: provided
+      Layers:
+      - arn:aws:lambda:us-east-2:426836788079:layer:Swift:8
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: "SwiftLambdaTodo"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref APIGateway
+            Path: /todos/{id}
+            Method: DELETE
+
+  TodoAPIGatewayPatchTodo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda.zip
+      Handler: "patchTodo"
+      Runtime: provided
+      Layers:
+        - arn:aws:lambda:us-east-2:426836788079:layer:Swift:8
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: "SwiftLambdaTodo"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref APIGateway
+            Path: /todos/{id}
+            Method: PATCH
