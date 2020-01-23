@@ -33,6 +33,11 @@ extension DynamoModel {
         }
     }
 
+    public func update(on database: DynamoDB) -> EventLoopFuture<Self> {
+        return self._update(on: database)
+            .map { return self }
+    }
+
     private func _create(on database: DynamoDB) -> EventLoopFuture<Void> {
         self._$id.generate()
         return Self.query(on: database)
