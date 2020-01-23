@@ -10,6 +10,9 @@ let package = Package(
         .library(
             name: "SwiftDynamo",
             targets: ["SwiftDynamo"]),
+        .library(
+            name: "XCTDynamo",
+            targets: ["XCTDynamo"])
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -22,8 +25,11 @@ let package = Package(
         .target(
             name: "SwiftDynamo",
             dependencies: ["DynamoDB"]),
+        .target(
+            name: "XCTDynamo",
+            dependencies: ["SwiftDynamo"]),
         .testTarget(
             name: "SwiftDynamoTests",
-            dependencies: ["SwiftDynamo"]),
+            dependencies: ["SwiftDynamo", "XCTDynamo"]),
     ]
 )

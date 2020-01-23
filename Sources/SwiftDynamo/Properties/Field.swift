@@ -21,6 +21,10 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
     // Value from user input.
     public var inputValue: DynamoQuery.Value?
 
+    public var sortKey: Bool
+
+    public var partitionKey: Bool
+
     // The value that gets exposed to the user.
     public var wrappedValue: Value {
         get {
@@ -47,8 +51,10 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
     ///
     /// - parameters:
     ///     - key: The database key for the field.
-    public init(key: String) {
+    public init(key: String, sortKey: Bool = false, partitionKey: Bool = false) {
         self.key = key
+        self.sortKey = sortKey
+        self.partitionKey = partitionKey
     }
 
     // The value exposed when referencing with `$`.

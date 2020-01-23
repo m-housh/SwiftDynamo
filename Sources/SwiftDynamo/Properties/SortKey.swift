@@ -26,6 +26,9 @@ public final class SortKey<Value>: AnyField, FieldRepresentible, AnySortKey wher
     // We delegate responsibilities to the field.
     public var projectedValue: SortKey<Value> { self }
 
+    public var sortKey: Bool = true
+    public var partitionKey: Bool = false
+
     /// Create a new instance.
     ///
     /// - parameters:

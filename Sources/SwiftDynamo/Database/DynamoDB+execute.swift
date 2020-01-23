@@ -48,7 +48,7 @@ extension DynamoDB {
         //      This will likely need updated to use a partition key as the
         //      differentiator.
 
-        if query.sortKey == nil {
+        if query.sortKey == nil && query.partitionKey == nil {
             // use scan.
             return self.scan(.init(tableName: query.schema.tableName))
                 .map { output in

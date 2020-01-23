@@ -49,6 +49,10 @@ public protocol AnyField: AnyProperty {
 
     /// Convert ourself to a valid `DynamoDB.AttributeValue`
     func attributeValue() throws -> DynamoDB.AttributeValue?
+
+    var sortKey: Bool { get }
+
+    var partitionKey: Bool { get }
 }
 
 /// A type that can be used as a sort key for a `DynamoSchema`.
@@ -73,6 +77,7 @@ protocol AnyID: AnyField {
     var exists: Bool { get set }
 
     var cachedOutput: DatabaseOutput? { get set }
+
 }
 
 // Delegate responsibilities to the field.
@@ -89,6 +94,10 @@ extension AnyField where Self: FieldRepresentible {
 
     public func attributeValue() throws -> DynamoDB.AttributeValue? {
         try self.field.attributeValue()
+    }
+
+    public var description: String {
+        "AnyField(key: \(key), sortKey: \(sortKey), partitionKey: \(partitionKey))"
     }
 }
 

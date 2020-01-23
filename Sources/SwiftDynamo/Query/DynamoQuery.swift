@@ -52,9 +52,7 @@ public struct DynamoQuery {
     
     // create an options container from current state.
     var optionsContainer: OptionsContainer {
-        // create the container and set the default options.
-        self.options
-            .reduce(into: OptionsContainer()) { $1.setOption(&$0) }
+        OptionsContainer(query: self)
     }
 
     public init(schema: DynamoSchema) {
@@ -201,7 +199,19 @@ extension DynamoQuery {
             case equality(inverse: Bool)
         }
 
-        case field(String, Method, Value)
+        public struct FieldFilterKey {
+            let key: String
+            let isPartitionKey: Bool
+            let isSortKey: Bool
+
+            public init(_ key: String, isPartitionKey: Bool = false, isSortKey: Bool = false) {
+                self.key = key
+                self.isSortKey = isSortKey
+                self.isPartitionKey = isPartitionKey
+            }
+        }
+
+        case field(FieldFilterKey, Method, Value)
     }
 }
 
@@ -242,5 +252,40 @@ extension DynamoQuery.OptionsContainer {
         } else {
             keyConditionExpression! += " and \(key) = \(expression)"
         }
+    }
+
+    mutating func addFilterExpression(_ key: String, _ expression: String) {
+        if filterExpression == nil {
+            filterExpression = "\(key) = \(expression)"
+        } else {
+            filterExpression = " and \(key) = \(expression)"
+        }
+    }
+
+    init(query: DynamoQuery) {
+        // create the container and set the default options.
+        var options = query.options
+            .reduce(into: Self()) { $1.setOption(&$0) }
+
+        if query.filters.count > 0 {
+            for filter in query.filters {
+                switch filter {
+                case let .field(fieldKey, _, value):
+
+                    // set non-key condition filters.
+                    if !(options.expressionAttributeValues?.contains(where: { $0.key == fieldKey.key }) ?? false) {
+                        let expression = ":\(fieldKey.key)"
+                        options.setExpressionAttribute(expression, try! value.attributeValue())
+                        if fieldKey.isPartitionKey || fieldKey.isSortKey {
+                            options.addKeyConditionExpression(fieldKey.key, expression)
+                        }
+                        else {
+                            options.addFilterExpression(fieldKey.key, expression)
+                        }
+                    }
+                }
+            }
+        }
+        self = options
     }
 }

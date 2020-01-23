@@ -18,3 +18,11 @@ scan_todos:
 	@aws dynamodb scan \
 		--endpoint-url $(ENDPOINT) \
 		--table-name $(TABLENAME)
+
+get_todo:
+	@aws dynamodb query \
+		--endpoint-url $(ENDPOINT) \
+		--table-name $(TABLENAME) \
+		--key-condition-expression "ListID = :listID and TodoID = :todoID" \
+		--expression-attribute-values '{":listID": {"S": "list"}, ":todoID": {"S": "9D1007B4-D386-42A3-99A1-31469983443C"}}'
+

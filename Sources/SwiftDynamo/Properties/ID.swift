@@ -71,13 +71,17 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
     // Expose ourself through the `$` prefix.
     public var projectedValue: ID<Value> { self }
 
+    public var sortKey: Bool { field.sortKey }
+
+    public var partitionKey: Bool { field.partitionKey }
+
     /// Create a new instance.
     ///
     /// - parameters:
     ///     - key: The database key for the id.
     ///     - generator: The generator type for the id, will use the default for the `Value` if not supplied.
     public init(key: String, type: IDType = .partitionKey, generatedBy generator: Generator? = nil) {
-        self.field = .init(key: key)
+        self.field = .init(key: key, sortKey: (type == .sortKey), partitionKey: (type == .partitionKey))
         self.generator = generator ?? Generator.default(for: Value.self)
         self.exists = false
         self.cachedOutput = nil
