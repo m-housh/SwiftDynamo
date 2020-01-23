@@ -146,13 +146,13 @@ extension DynamoQuery {
                 let attribute = try! value.attributeValue()
                 let expression = ":sortKey"
                 options.setExpressionAttribute(expression, attribute)
-                options.addKeyConditionExpression(key, expression)
+                options.addKeyConditionExpression(key, .equal, expression)
             case let .partitionKey(key, value):
                 options.partitionKey = (key, value)
                 let attribute = try! value.attributeValue()
                 let expression = ":partitionID"
                 options.setExpressionAttribute(expression, attribute)
-                options.addKeyConditionExpression(key, expression)
+                options.addKeyConditionExpression(key, .equal, expression)
             }
         }
 
@@ -185,7 +185,7 @@ extension DynamoQuery {
 
     public enum Filter {
 
-        public enum Method {
+        public enum Method: CustomStringConvertible {
 
             public static var equal: Method {
                 .equality(inverse: false)
@@ -197,6 +197,13 @@ extension DynamoQuery {
 
             // LHS is equal to RHS
             case equality(inverse: Bool)
+
+            public var description: String {
+                switch self {
+                case let .equality(direction):
+                    return direction != true ? "=" : "<>"
+                }
+            }
         }
 
         public struct FieldFilterKey {
@@ -246,19 +253,28 @@ extension DynamoQuery.OptionsContainer {
         }
     }
 
-    mutating func addKeyConditionExpression(_ key: String, _ expression: String) {
+    mutating func addKeyConditionExpression(
+        _ key: String,
+        _ method: DynamoQuery.Filter.Method,
+        _ expression: String)
+    {
+
+        guard method.description != "<>" else {
+            fatalError("Can not use not equal expression on sort key or partition key")
+        }
+
         if keyConditionExpression == nil {
-            keyConditionExpression = "\(key) = \(expression)"
+            keyConditionExpression = "\(key) \(method) \(expression)"
         } else {
-            keyConditionExpression! += " and \(key) = \(expression)"
+            keyConditionExpression! += " and \(key) \(method) \(expression)"
         }
     }
 
-    mutating func addFilterExpression(_ key: String, _ expression: String) {
+    mutating func addFilterExpression(_ key: String, _ method: DynamoQuery.Filter.Method, _ expression: String) {
         if filterExpression == nil {
-            filterExpression = "\(key) = \(expression)"
+            filterExpression = "\(key) \(method) \(expression)"
         } else {
-            filterExpression = " and \(key) = \(expression)"
+            filterExpression = " and \(key) \(method) \(expression)"
         }
     }
 
@@ -270,17 +286,17 @@ extension DynamoQuery.OptionsContainer {
         if query.filters.count > 0 {
             for filter in query.filters {
                 switch filter {
-                case let .field(fieldKey, _, value):
+                case let .field(fieldKey, method, value):
 
                     // set non-key condition filters.
                     if !(options.expressionAttributeValues?.contains(where: { $0.key == fieldKey.key }) ?? false) {
                         let expression = ":\(fieldKey.key)"
                         options.setExpressionAttribute(expression, try! value.attributeValue())
-                        if fieldKey.isPartitionKey || fieldKey.isSortKey {
-                            options.addKeyConditionExpression(fieldKey.key, expression)
+                        if (fieldKey.isPartitionKey || fieldKey.isSortKey) {
+                            options.addKeyConditionExpression(fieldKey.key, method, expression)
                         }
                         else {
-                            options.addFilterExpression(fieldKey.key, expression)
+                            options.addFilterExpression(fieldKey.key, method, expression)
                         }
                     }
                 }

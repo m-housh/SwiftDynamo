@@ -70,6 +70,11 @@ extension XCTDynamoTestCase where Self: XCTestCase {
         return self
     }
 
+    public func deleteAll() {
+        try! fetchAll() { models in
+            _ = models.map { try! Model.delete(id: $0.id!, on: self.database).wait() }
+        }
+    }
 
     public func runTest(
         _ function: StaticString = #function,

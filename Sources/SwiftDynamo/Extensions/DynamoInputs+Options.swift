@@ -97,6 +97,7 @@ extension DynamoDB.UpdateItemInput {
     }
 }
 
+// MARK: - Delete
 extension DynamoDB.BatchWriteItemInput {
 
     static func deleteRequest(from query: DynamoQuery) -> DynamoDB.BatchWriteItemInput {
@@ -119,6 +120,8 @@ extension DynamoDB.DeleteRequest {
     }
 }
 
+// MARK: - Helpers
+
 extension DynamoQuery.Value {
 
     func assertDictionary() throws -> [String: DynamoQuery.Value] {
@@ -129,29 +132,11 @@ extension DynamoQuery.Value {
         }
     }
 
-    func convertToAttributes() throws -> [String: DynamoDB.AttributeValue] {
-        let dictionary = try assertDictionary()
-        return try _convertDictionary(dictionary)
-    }
-
-    func convertToAttributeValueUpdate(action: DynamoDB.AttributeAction = .put) throws -> [String: DynamoDB.AttributeValueUpdate] {
-        try convertToAttributes()
-            .reduce(into: [String: DynamoDB.AttributeValueUpdate]()) { result, keyAndAttribute in
-                result[keyAndAttribute.key] = .init(action: action, value: keyAndAttribute.value)
-            }
-    }
-
-    func _convertDictionary(_ dictionary: [String: DynamoQuery.Value]) throws -> [String: DynamoDB.AttributeValue] {
-        try dictionary.reduce(into: [String: DynamoDB.AttributeValue]()) { result, keyAndValue in
-            result[keyAndValue.key] = try keyAndValue.value.attributeValue()
-        }
-    }
-
     func attributeValue() throws -> DynamoDB.AttributeValue {
         switch self {
         case let .bind(encodable): return try encodable.convertToAttribute()
         case let .dictionary(dictionary):
-            return .init(m: try _convertDictionary(dictionary))
+            return .init(m: try dictionary.convertToAttributes())
         }
     }
 }
@@ -208,6 +193,16 @@ extension Dictionary where Value == DynamoDB.AttributeValue, Key == String {
         reduce(into: [String: DynamoDB.AttributeValueUpdate]()) { result, keyAndValue in
             let (key, value) = keyAndValue
             result[key] = .init(action: action, value: value)
+        }
+    }
+}
+
+extension Dictionary where Value == DynamoQuery.Value, Key == String {
+
+    func convertToAttributes() throws -> [String: DynamoDB.AttributeValue] {
+        try reduce(into: [String: DynamoDB.AttributeValue]()) { result, keyAndValue in
+            let (key, value) = keyAndValue
+            result[key] = try value.attributeValue()
         }
     }
 }

@@ -73,6 +73,18 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         return self
     }
 
+    @discardableResult
+    public func set<Value>(
+        _ key: KeyPath<Model, ID<Value>>,
+        to value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let fieldKey = Model()[keyPath: key].field.key
+        query.input.append(.dictionary([fieldKey: .bind(value)]))
+        return self
+    }
+
 
     @discardableResult
     public func setOption(_ option: DynamoQuery.Option) -> Self {
@@ -93,17 +105,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         self.filter(
             .field(filter.key, filter.method, filter.value)
         )
-    }
-
-    @discardableResult
-    public func filter<Value>(
-        _ field: Field<Value>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Value
-    ) -> Self
-        where Value: Codable
-    {
-        return self.filter(.field(.init(field: field), method, .bind(value)))
     }
 
     @discardableResult
@@ -218,6 +219,11 @@ extension DynamoQueryBuilder {
 public func == <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> DynamoModelValueFilter<Model>
         where Model: DynamoModel, Field: FieldRepresentible {
             .init(lhs, .equal, rhs)
+}
+
+public func != <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> DynamoModelValueFilter<Model>
+        where Model: DynamoModel, Field: FieldRepresentible {
+            .init(lhs, .notEqual, rhs)
 }
 
 public struct DynamoModelValueFilter<Model> where Model: DynamoModel {

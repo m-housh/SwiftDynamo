@@ -110,7 +110,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             let patch = PatchTodo(title: "Patched", order: 80, completed: false)
             var query = TestModel
                 .query(on: database)
-                .filter(\.$id == random.id!)
+                .filter(\.$id, .equal, random.id!)
 
             patch.patchQuery(&query)
             try query.update().wait()
@@ -123,6 +123,50 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             }
             .fetchAll() {
                 XCTAssertEqual($0.count, beforeCount)
+            }
+        }
+    }
+
+    func testCreateAction() throws {
+        try runTest {
+            let model = TestModel(id: .init(), title: "Created", completed: true, order: 10)
+
+            try TestModel.query(on: database)
+                .set(\.$id,  to: model.id!)
+                .set(\.$title, to: model.title)
+                .set(\.$completed, to: model.completed)
+                .set(\.$order, to: model.order!)
+                .create()
+                .wait()
+
+            try find(id: model.id!) { fetched in
+                XCTAssertNotNil(fetched)
+                XCTAssertEqual(fetched, model)
+            }
+        }
+    }
+
+    func testDeleteAction() throws {
+        try runTest(seed: true) {
+
+            var random: TestModel!
+            var beforeCount: Int!
+
+            try fetchAll() {
+                beforeCount = $0.count
+                random = $0.randomElement()!
+            }
+
+            try TestModel.query(on: database)
+                .filter(\.$id.field, .equal, random.id!)
+                .delete()
+                .wait()
+
+            try fetchAll() {
+                XCTAssertEqual($0.count, beforeCount - 1)
+            }
+            .find(id: random.id!) {
+                XCTAssertNil($0)
             }
         }
     }
@@ -163,19 +207,46 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             try fetchAll() { models in
                 random = models.randomElement()!
             }
-//            .find(id: random.id!) { fetched in
-//                XCTAssertEqual(fetched, random)
-//            }
-            let fetched = try TestModel.query(on: database)
-                .filter(\.$title == random.title)
-                .first()
-                .wait()
+            .find(id: random.id!) { fetched in
+                XCTAssertEqual(fetched, random)
+            }
+            .run(
+                // We have to use run or it fails when running in parallel with other tests,
+                // works when run by itself -\_0_/-
+                TestModel.query(on: database)
+                    .filter(\.$title == random.title)
+            ) { output in
+                let model = TestModel()
+                try model.output(from: output)
+                XCTAssertEqual(model.title, random.title)
+            }
 
-            XCTAssertNotNil(fetched)
-            XCTAssertEqual(fetched?.title, random.title)
         }
     }
 
+    func testNotEqualFilter() throws {
+        try runTest(seed: true) {
+
+            var random: TestModel!
+            var count: Int = 0
+
+            try fetchAll() {
+                random = $0.randomElement()!
+                count = $0.count
+            }
+
+            let fetched = try TestModel
+                .query(on: database)
+                .filter(\.$title != random.title)
+                .all()
+                .wait()
+
+            XCTAssertEqual(count - 1, fetched.count)
+            XCTAssertNil(fetched.first(where: { $0.id == random.id! }))
+        }
+    }
+
+    // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),
         TestModel(id: .init(), title: "Two", completed: true, order: 2),
@@ -188,16 +259,6 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
 
     func saveSeeds() {
         _ = seeds.map { try! $0.save(on: database).wait() }
-    }
-
-    func deleteSeeds() {
-        _ = seeds.map { try! TestModel.delete(id: $0.id!, on: database).wait() }
-    }
-
-    func deleteAll() {
-        try! fetchAll() { models in
-            _ = models.map { try! TestModel.delete(id: $0.id!, on: self.database).wait() }
-        }
     }
 
     func runTest(
