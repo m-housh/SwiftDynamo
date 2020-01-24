@@ -120,23 +120,9 @@ struct TodoController {
         catch {
             return context.eventLoop.makeFailedFuture(error)
         }
+        patchTodo.id = uuid
 
-        let todoModel = TodoModel()
-        todoModel.id = uuid
-
-        if let title = patchTodo.title {
-            todoModel.title = title
-        }
-
-        if let order = patchTodo.order {
-            todoModel.order = order
-        }
-
-        if let completed = patchTodo.completed {
-            todoModel.completed = completed
-        }
-
-        return self.store.saveTodo(todoModel)
+        return self.store.patchTodo(patchTodo)
             .flatMapThrowing { (todo) -> APIGateway.Response in
                 return try APIGateway.Response(
                     statusCode: .ok,

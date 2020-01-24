@@ -88,4 +88,32 @@ final class QueryBuilderTests: XCTestCase {
 
     }
 
+    func testSettingSortKeyAndPartitionKey() {
+        final class ModelWithOutSortKey: DynamoModel {
+
+            static var schema: DynamoSchema = "ModelWithSortKey"
+
+            @ID(key: "ID")
+            var id: Int?
+
+            init() { }
+
+        }
+
+        let builder = ModelWithOutSortKey
+            .query(on: .testing)
+
+
+        XCTAssertNil(builder.query.sortKey)
+        XCTAssertNil(builder.query.partitionKey)
+
+        builder
+            .setSortKey(sortKey: "foo", to: "bar")
+            .setPartitionKey(partitionKey: "baz", to: "boom")
+
+        XCTAssertNotNil(builder.query.sortKey)
+        XCTAssertNotNil(builder.query.partitionKey)
+
+    }
+
 }

@@ -27,10 +27,9 @@ extension DynamoModel {
         if !self._$id.exists {
             return self._create(on: database)
                 .map { return self }
-        } else {
-            return self._update(on: database)
-                .map { return self }
         }
+        return self._update(on: database)
+            .map { return self }
     }
 
     public func update(on database: DynamoDB) -> EventLoopFuture<Self> {

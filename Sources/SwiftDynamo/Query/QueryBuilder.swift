@@ -35,6 +35,8 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         return setOption(.limit(limit))
     }
 
+    // MARK: - Set
+
     @discardableResult
     public func setSortKey(sortKey key: String, to value: Encodable) -> Self {
         query.sortKey = (key, .bind(value))
@@ -60,6 +62,31 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
+    public func set<Value>(
+        _ key: KeyPath<Model, Field<Value>>,
+        to value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let fieldKey = Model()[keyPath: key].field.key
+        query.input.append(.dictionary([fieldKey: .bind(value)]))
+        return self
+    }
+
+    @discardableResult
+    public func set<Value>(
+        _ key: KeyPath<Model, ID<Value>>,
+        to value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let fieldKey = Model()[keyPath: key].field.key
+        query.input.append(.dictionary([fieldKey: .bind(value)]))
+        return self
+    }
+
+
+    @discardableResult
     public func setOption(_ option: DynamoQuery.Option) -> Self {
         query.options.append(option)
         return self
@@ -82,24 +109,13 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
     @discardableResult
     public func filter<Value>(
-        _ field: Field<Value>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Value
-    ) -> Self
-        where Value: Codable
-    {
-        return self.filter(.field(field.key, method, .bind(value)))
-    }
-
-    @discardableResult
-    public func filter<Value>(
         _ field: KeyPath<Model, Field<Value>>,
         _ method: DynamoQuery.Filter.Method,
         _ value: Value
     ) -> Self
         where Value: Codable
     {
-        return self.filter(.field(Model.key(for: field), method, .bind(value)))
+        return self.filter(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
     }
 
     @discardableResult
@@ -110,7 +126,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     ) -> Self
         where Field: FieldRepresentible, Field.Value == Value
     {
-        query.filters.append(.field(Model.key(for: field), method, .bind(value)))
+        query.filters.append(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
         return self
     }
 
@@ -169,11 +185,11 @@ extension DynamoQueryBuilder {
 
         return self.run { output in
             switch output.output {
-            case let .list(models):
-                for _ in models {
+            case let .list(rows):
+                for row in rows {
                     onOutput(.init(catching: {
                         let model = Model()
-                        try model.output(from: output)
+                        try model.output(from: .init(database: output.database, output: .dictionary(row)))
                         all.append(model)
                         return model
                     }))
@@ -205,9 +221,14 @@ public func == <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> D
             .init(lhs, .equal, rhs)
 }
 
+public func != <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> DynamoModelValueFilter<Model>
+        where Model: DynamoModel, Field: FieldRepresentible {
+            .init(lhs, .notEqual, rhs)
+}
+
 public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
 
-    let key: String
+    let key: DynamoQuery.Filter.FieldFilterKey
     let method: DynamoQuery.Filter.Method
     let value: DynamoQuery.Value
 
@@ -218,8 +239,18 @@ public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
     )
         where Field: FieldRepresentible
     {
-        self.key = Model.init()[keyPath: lhs].field.key
+        let field = Model()[keyPath: lhs].field
+        self.key = .init(field: field)
         self.method = method
         self.value = .bind(value)
+    }
+}
+
+extension DynamoQuery.Filter.FieldFilterKey {
+
+    init(field: AnyField) {
+        self.key = field.key
+        self.isPartitionKey = field.partitionKey
+        self.isSortKey = field.sortKey
     }
 }

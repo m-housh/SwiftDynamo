@@ -52,9 +52,7 @@ public struct DynamoQuery {
     
     // create an options container from current state.
     var optionsContainer: OptionsContainer {
-        // create the container and set the default options.
-        self.options
-            .reduce(into: OptionsContainer()) { $1.setOption(&$0) }
+        OptionsContainer(query: self)
     }
 
     public init(schema: DynamoSchema) {
@@ -148,13 +146,13 @@ extension DynamoQuery {
                 let attribute = try! value.attributeValue()
                 let expression = ":sortKey"
                 options.setExpressionAttribute(expression, attribute)
-                options.addKeyConditionExpression(key, expression)
+                options.addKeyConditionExpression(key, .equal, expression)
             case let .partitionKey(key, value):
                 options.partitionKey = (key, value)
                 let attribute = try! value.attributeValue()
                 let expression = ":partitionID"
                 options.setExpressionAttribute(expression, attribute)
-                options.addKeyConditionExpression(key, expression)
+                options.addKeyConditionExpression(key, .equal, expression)
             }
         }
 
@@ -187,7 +185,7 @@ extension DynamoQuery {
 
     public enum Filter {
 
-        public enum Method {
+        public enum Method: CustomStringConvertible {
 
             public static var equal: Method {
                 .equality(inverse: false)
@@ -199,9 +197,28 @@ extension DynamoQuery {
 
             // LHS is equal to RHS
             case equality(inverse: Bool)
+
+            public var description: String {
+                switch self {
+                case let .equality(direction):
+                    return direction != true ? "=" : "<>"
+                }
+            }
         }
 
-        case field(String, Method, Value)
+        public struct FieldFilterKey {
+            let key: String
+            let isPartitionKey: Bool
+            let isSortKey: Bool
+
+            public init(_ key: String, isPartitionKey: Bool = false, isSortKey: Bool = false) {
+                self.key = key
+                self.isSortKey = isSortKey
+                self.isPartitionKey = isPartitionKey
+            }
+        }
+
+        case field(FieldFilterKey, Method, Value)
     }
 }
 
@@ -236,11 +253,52 @@ extension DynamoQuery.OptionsContainer {
         }
     }
 
-    mutating func addKeyConditionExpression(_ key: String, _ expression: String) {
-        if keyConditionExpression == nil {
-            keyConditionExpression = "\(key) = \(expression)"
-        } else {
-            keyConditionExpression! += " and \(key) = \(expression)"
+    mutating func addKeyConditionExpression(
+        _ key: String,
+        _ method: DynamoQuery.Filter.Method,
+        _ expression: String)
+    {
+
+        guard method.description != "<>" else {
+            fatalError("Can not use not equal expression on sort key or partition key")
         }
+
+        if keyConditionExpression == nil {
+            keyConditionExpression = "\(key) \(method) \(expression)"
+        } else {
+            keyConditionExpression! += " and \(key) \(method) \(expression)"
+        }
+    }
+
+    mutating func addFilterExpression(_ key: String, _ method: DynamoQuery.Filter.Method, _ expression: String) {
+        if filterExpression == nil {
+            filterExpression = "\(key) \(method) \(expression)"
+        } else {
+            filterExpression! += " and \(key) \(method) \(expression)"
+        }
+    }
+
+    init(query: DynamoQuery) {
+        // create the container and set the options.
+        var options = query.options
+            .reduce(into: Self()) { $1.setOption(&$0) }
+
+        // Add filter expressions.
+        if query.filters.count > 0 {
+            for filter in query.filters {
+                switch filter {
+                case let .field(fieldKey, method, value):
+                    let expression = ":\(fieldKey.key)"
+                    options.setExpressionAttribute(expression, try! value.attributeValue())
+                    if (fieldKey.isPartitionKey || fieldKey.isSortKey) {
+                        options.addKeyConditionExpression(fieldKey.key, method, expression)
+                    }
+                    else {
+                        options.addFilterExpression(fieldKey.key, method, expression)
+                    }
+                }
+            }
+        }
+        self = options
     }
 }
