@@ -178,6 +178,42 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         }
     }
 
+    func testUpdateWithPatch3() throws {
+        try runTest(seed: true) {
+            var random: TestModel!
+            var beforeCount = 0
+
+            try fetchAll {
+                random = $0.randomElement()!
+                beforeCount = $0.count
+            }
+
+            let patch = PatchTodo(title: "Patched", order: 80, completed: false)
+            var query = TestModel
+                .query(on: database)
+                .filter(\.$id, .equal, random.id!)
+
+            patch.patchQuery(&query)
+            let saved = try query
+                .setAction(action: .update)
+                .first()
+                .wait()
+
+            XCTAssertNotNil(saved)
+
+            try find(id: random.id!) { afterSave in
+                XCTAssertNotNil(afterSave)
+                XCTAssertEqual(afterSave!.order, 80)
+                XCTAssertEqual(afterSave!.title, "Patched")
+                XCTAssertEqual(afterSave!.completed, false)
+                XCTAssertEqual(saved, afterSave)
+            }
+            .fetchAll() {
+                XCTAssertEqual($0.count, beforeCount)
+            }
+        }
+    }
+
     func testCreateAction() throws {
         try runTest {
             let model = TestModel(id: .init(), title: "Created", completed: true, order: 10)

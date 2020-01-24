@@ -114,8 +114,8 @@
         "repositoryURL": "https://github.com/m-housh/SwiftDynamo.git",
         "state": {
           "branch": null,
-          "revision": "d3afe9fbb005e9e5b436f4c97dfb471184c9db02",
-          "version": "0.1.1"
+          "revision": "57a15e7759f746651b426b92a2dd40213caadf8f",
+          "version": "0.1.2"
         }
       }
     ]

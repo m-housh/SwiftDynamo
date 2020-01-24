@@ -12,6 +12,6 @@ public protocol TodoStore {
     func getTodos() -> EventLoopFuture<[TodoModel]>
     func getTodo(id: UUID) -> EventLoopFuture<TodoModel>
     func saveTodo(_ todo: TodoModel) -> EventLoopFuture<TodoModel>
-    func patchTodo(_ todo: PatchTodo) -> EventLoopFuture<TodoModel>
+    func patchTodo(id: UUID, _ patch: PatchTodo) -> EventLoopFuture<TodoModel>
     func deleteTodo(id: UUID) -> EventLoopFuture<Void>
 }
