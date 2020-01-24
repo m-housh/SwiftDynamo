@@ -192,5 +192,13 @@ final class DynamoConverterTests: XCTestCase {
 
         let converted = try DynamoConverter().convertToAttribute(names)
         XCTAssertNotNil(converted.l)
+        let attributes = converted.l!.map { return ($0.m!["first"]!.s!, $0.m!["last"]!.s!) }
+        let firsts = ["foo", "joan", "boom"]
+        let lasts = ["bar", "jettson", "bing"]
+
+        for (first, last) in attributes {
+            XCTAssert(firsts.contains(first))
+            XCTAssert(lasts.contains(last))
+        }
     }
 }

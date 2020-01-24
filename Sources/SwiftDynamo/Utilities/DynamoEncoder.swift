@@ -715,6 +715,13 @@ extension _DynamoEncoder {
             return try box(dictionary as! [String: Encodable])
         }
 
+        // check if it's an empty array, they make `aws` blow up
+        // when decoding, it thinks they're empty string sets.
+        // - issue #8
+        if let array = value as? [Any], array.count == 0 {
+            return nil
+        }
+
         // get our current depth to ensure a container gets pushed onto the stack.
         let depth = storage.count
         do {

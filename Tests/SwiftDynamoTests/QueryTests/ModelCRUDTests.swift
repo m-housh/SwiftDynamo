@@ -375,6 +375,48 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         }
     }
 
+    // Empty lists work on our end, but `aws` fails when decoding
+    // items from the database because they think they are empty string sets.
+    func testEmptyListsWorkCorrectly() throws {
+        final class PartitionTodo: DynamoModel {
+            static var schema: DynamoSchema = "TodoPartitionTest"
+
+            @ID(key: "TodoID", type: .partitionKey)
+            var id: UUID?
+
+            @Field(key: "Completed")
+            var completed: Bool
+
+            @Field(key: "Order")
+            var order: Int?
+
+            @Field(key: "Title")
+            var titles: [String]
+
+            @Field(key: "Names")
+            var names: [Name]
+
+            init() { }
+
+            struct Name: Codable {
+                var first: String
+                var last: String
+            }
+        }
+
+        let model = PartitionTodo()
+        model.id = .init()
+        model.completed = false
+        model.order = 1
+        model.titles = [] // test with primitive types
+        model.names = [] // test with non-primitive types
+
+        let saved = try model.save(on: database).wait()
+        XCTAssertEqual(saved.titles.count, 0)
+        XCTAssertEqual(saved.names.count, 0)
+
+    }
+
     // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),
