@@ -1,0 +1,21 @@
+{
+    "TableName": "TodoPartitionTest",
+    "KeySchema": [
+        {
+            "AttributeName": "TodoID",
+            "KeyType": "HASH"
+        }
+    ],
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "TodoID",
+            "AttributeType": "S"
+        }
+
+    ],
+     "ProvisionedThroughput": { 
+        "ReadCapacityUnits": 1, 
+        "WriteCapacityUnits": 1 
+    }
+}
+   

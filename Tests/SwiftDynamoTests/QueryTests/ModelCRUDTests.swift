@@ -333,6 +333,48 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         }
     }
 
+    func testQueryOnPartitionOnlyKeyTable() throws {
+        final class PartitionTodo: DynamoModel {
+            static var schema: DynamoSchema = "TodoPartitionTest"
+
+            @ID(key: "TodoID", type: .partitionKey)
+            var id: UUID?
+
+            @Field(key: "Completed")
+            var completed: Bool
+
+            @Field(key: "Order")
+            var order: Int?
+
+            @Field(key: "Title")
+            var title: String
+
+            init() { }
+
+            convenience init(model: TestModel) {
+                self.init()
+                self.id = model.id
+                self.completed = model.completed
+                self.order = model.order
+                self.title = model.title
+            }
+        }
+
+        try runTest {
+            let seeds = self.seeds.map { PartitionTodo(model: $0) }
+            _ = try seeds.map { try $0.save(on: database).wait() }
+
+            let random = seeds.last!
+
+            let builder = PartitionTodo.query(on: database).filter(\.$id == random.id!)
+            print(builder.query.options)
+            print(builder.query.optionsContainer)
+
+            let fetched = try PartitionTodo.find(id: random.id!, on: database).wait()
+            XCTAssertEqual(random.id, fetched!.id)
+        }
+    }
+
     // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),
