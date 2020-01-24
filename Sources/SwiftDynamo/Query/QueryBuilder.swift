@@ -56,6 +56,12 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
+    public func setAction(action: DynamoQuery.Action) -> Self {
+        return self.action(action)
+    }
+
+
+    @discardableResult
     public func set(_ data: [String: DynamoQuery.Value]) -> Self {
         query.input.append(.dictionary(data))
         return self
@@ -95,13 +101,13 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     // MARK: - Filter
 
     @discardableResult
-    func filter(_ filter: DynamoQuery.Filter) -> Self {
+    public func filter(_ filter: DynamoQuery.Filter) -> Self {
         query.filters.append(filter)
         return self
     }
 
     @discardableResult
-    func filter(_ filter: DynamoModelValueFilter<Model>) -> Self {
+    public func filter(_ filter: DynamoModelValueFilter<Model>) -> Self {
         self.filter(
             .field(filter.key, filter.method, filter.value)
         )
@@ -194,8 +200,13 @@ extension DynamoQueryBuilder {
                         return model
                     }))
                 }
-            default:
-                fatalError("Invalid database output, expected a list.")
+            case let .dictionary(row):
+                onOutput(.init(catching: {
+                    let model = Model()
+                    try model.output(from: .init(database: output.database, output: .dictionary(row)))
+                    all.append(model)
+                    return model
+                }))
             }
         }
     }
