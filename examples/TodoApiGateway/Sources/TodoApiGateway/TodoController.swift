@@ -41,11 +41,6 @@ struct TodoController {
         do {
             let payload = try request.decodeBody(TodoModel.self)
             newTodo = payload
-//            newTodo = TodoItem(
-//                id: UUID().uuidString.lowercased(),
-//                order: payload.order,
-//                title: payload.title,
-//                completed: payload.completed ?? false)
         }
         catch {
             return context.eventLoop.makeFailedFuture(error)
@@ -59,17 +54,6 @@ struct TodoController {
                     payload: todo)
             }
     }
-
-//    func deleteAll(request: APIGateway.Request, context: Context) -> EventLoopFuture<APIGateway.Response> {
-//      return self.store.deleteAllTodos()
-//        .flatMapThrowing { _ -> APIGateway.Response in
-//          return try APIGateway.Response(
-//            statusCode: .ok,
-//            headers: TodoController.sharedHeader,
-//            payload: [TodoItem](),
-//            encoder: self.createResponseEncoder(request))
-//        }
-//    }
 
     func getTodo(request: APIGateway.Request, context: Context) -> EventLoopFuture<APIGateway.Response> {
       guard let id = request.pathParameters?["id"], let uuid = UUID(uuidString: id) else {
@@ -120,9 +104,8 @@ struct TodoController {
         catch {
             return context.eventLoop.makeFailedFuture(error)
         }
-        patchTodo.id = uuid
 
-        return self.store.patchTodo(patchTodo)
+        return self.store.patchTodo(id: uuid, patchTodo)
             .flatMapThrowing { (todo) -> APIGateway.Response in
                 return try APIGateway.Response(
                     statusCode: .ok,

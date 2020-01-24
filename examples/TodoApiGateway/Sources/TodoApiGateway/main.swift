@@ -32,8 +32,6 @@ do {
     handler = APIGateway.handler(controller.listTodos)
   case "create":
     handler = APIGateway.handler(controller.createTodo)
-//  case "deleteAll":
-//    handler = APIGateway.handler(controller.deleteAll)
   case "getTodo":
     handler = APIGateway.handler(controller.getTodo)
   case "deleteTodo":

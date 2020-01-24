@@ -3,5 +3,6 @@
 /Packages
 /*.xcodeproj
 xcuserdata/
-*/lambda.zip
-*/bootstrap
+examples/TodoApiGateway/lambda.zip
+examples/TodoApiGateway/bootstrap
+examples/TodoApiGateway/samconfig.toml

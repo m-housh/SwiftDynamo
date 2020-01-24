@@ -48,23 +48,17 @@ public struct DynamoTodoStore: TodoStore {
     }
 
     public func patchTodo(id: UUID, _ patch: PatchTodo) -> EventLoopFuture<TodoModel> {
-        var query = TodoModel.query(on: dynamoDB)
-            .filter(\.$id == id)
+        var query = TodoModel
+            .query(on: dynamoDB)
+            .filter(\.$id, .equal, id)
 
         patch.patchQuery(query: &query)
 
-        return query.update()
-            .flatMap { self.getTodo(id: id) }
+        return query
+            .setAction(action: .update)
+            .first()
+            .map { $0! }
 
-//        todo.update(on: dynamoDB)
-//            .map { patched in
-//                let model = TodoModel()
-//                model.id = patched.id
-//                model.completed = patched.completed ?? model.completed
-//                model.order = patched.order ?? model.order
-//                model.title = patched.title ?? model.title
-//                return model
-//            }
     }
 
     public func deleteTodo(id: UUID) -> EventLoopFuture<Void> {

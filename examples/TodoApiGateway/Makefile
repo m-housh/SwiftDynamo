@@ -23,7 +23,7 @@ build_lambda:
 		$(BUILDER_NAME) \
 		swift build -c release --disable-package-manifest-caching
 
-package_lambda: build_lambda
+package_lambda: clean_lambda build_lambda
 	cp .build/release/$(EXECUTABLE) ./bootstrap
 	zip -r -j $(LAMBDA_ZIP) ./bootstrap
 
