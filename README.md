@@ -52,6 +52,25 @@ final class TodoModel: DynamoModel {
     }
 }
 
+struct PatchTodo: Codable {
+    
+    let title: String?
+    let order: Int?
+    let completed: Bool?
+    
+    func patchQuery(query: inout DynamoQueryBuilder<TodoModel>) {
+        if let title = self.title {
+            query.set(\.$title, to: title)
+        }
+        if let order = self.order {
+            query.set(\.$order, to: order)
+        }
+        if let completed = self.completed {
+            query.set(\.$completed, to: completed)
+        }
+    }
+}
+
 ```
 
 ### TodoStore.swift
@@ -93,6 +112,18 @@ struct TodoStore {
             .first()
     }
     
+    func patchTodo(id: UUID, patch: PatchTodo) -> EventLoopFuture<TodoModel> {
+        var query = TodoModel.query(on: dynamoDB)
+            .filter(\.$id == id)
+            
+        patch.patchQuery(query: &query)
+        
+        return query
+            .setAction(action: .update)
+            .first()
+            .map { $0! }
+    }
+    
     func saveTodo(todo: TodoModel) -> EventLoopFuture<TodoModel> {
         todo.save(on: dynamoDB)
     }
@@ -101,6 +132,85 @@ struct TodoStore {
         TodoModel.delete(id: id, on: dynamoDB)
     }
 }
+```
+
+## Sort And Partition Keys
+
+Partition keys and sort keys can be set several ways depending the use case.
+
+### Set globally on the schema.
+```swift
+
+final class TodoModel: DynamoModel {
+
+    static var schema: DynamoSchema {
+        DynamoSchema(
+            "Todos",
+            partitionKey: .init(key: "ListID", default: "list"),
+            sortKey: nil // or .init(key: "MySortKey", default: "foo")
+        )
+    }
+    ...
+}
+```
+
+### Set as a field on the model.
+
+Any field also has flags in the initializer to declar it as a sort or partition key as well as some specialized fields.
+The `ID` field for example defaults to being a partition a key.  There is also a `SortKey` field.
+
+To change the behavior of an `ID` field it needs to be set at declaration.
+```swift
+
+...
+
+@ID(key: "TodoID", type: .sortKey, generatedBy: .user)
+var id: UUID
+
+...
+```
+
+To declare a sort key just use the `SortKey` field.
+```swift
+...
+
+@SortKey(key: "MySortKey")
+var sortKey: String
+
+...
+```
+
+Or declare a standard field as a sort or partition key at declaration.
+```swift
+...
+
+@Field(key: "MyPartitionKey", partitionKey: true, sortKey: false)
+var partitionKey: String
+
+...
+
+```
+
+### Set on a query
+You can also specify a sort key or a partition key on a query.  This could potentially override any values that are currently
+set on a query.
+
+```swift
+
+TodModel.query(on: dynamoDB)
+    .setSortKey(sortKey: "Foo", to: "Bar")
+    .setPartitionKey(partitionKey: "Bar", to: "Foo")
+    
+// or if you have a sort key field declared on the model.
+
+TodModel.query(on: dynamoDB)
+    .setSortKey(\.$sortKey, to: "Foo")
+    
+// if you declared a field then you would use the `set` method on the query.
+
+TodoModel.query(on: dynamoDB)
+    .set(\.$partitionKey, to: "Partition")
+    
 ```
 
 ## Status

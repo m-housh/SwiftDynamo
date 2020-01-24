@@ -51,7 +51,7 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
     ///
     /// - parameters:
     ///     - key: The database key for the field.
-    public init(key: String, sortKey: Bool = false, partitionKey: Bool = false) {
+    public init(key: String, partitionKey: Bool = false, sortKey: Bool = false) {
         self.key = key
         self.sortKey = sortKey
         self.partitionKey = partitionKey

@@ -69,7 +69,7 @@ public class ID<Value>: AnyID, FieldRepresentible, AnyField where Value: Codable
     ///     - key: The database key for the id.
     ///     - generator: The generator type for the id, will use the default for the `Value` if not supplied.
     public init(key: String, type: IDType = .partitionKey, generatedBy generator: Generator? = nil) {
-        self.field = .init(key: key, sortKey: (type == .sortKey), partitionKey: (type == .partitionKey))
+        self.field = .init(key: key, partitionKey: (type == .partitionKey), sortKey: (type == .sortKey))
         self.generator = generator ?? Generator.default(for: Value.self)
         self.exists = false
         self.cachedOutput = nil
