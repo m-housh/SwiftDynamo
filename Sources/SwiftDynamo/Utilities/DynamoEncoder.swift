@@ -513,7 +513,8 @@ fileprivate struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
             encodingType = .number
             try self.encode(num)
         } else {
-            // a list of encodable types.
+            // a list of encodable types.  We properly encode here, however
+            // dynamodb only supports lists of strings, numbers, or data.
             encodingType = .list
             try value.encode(to: self.encoder)
         }
@@ -718,8 +719,10 @@ extension _DynamoEncoder {
         // check if it's an empty array, they make `aws` blow up
         // when decoding, it thinks they're empty string sets.
         // - issue #8
-        if let array = value as? [Any], array.count == 0 {
-            return nil
+        if let array = value as? [Any] {
+            if array.count == 0 {
+                return nil
+            }
         }
 
         // get our current depth to ensure a container gets pushed onto the stack.
@@ -776,3 +779,18 @@ enum _DynamoCodingKey: CodingKey {
 enum EncodingError: Error {
     case invalidTopContainer
 }
+
+private protocol DynamoNumber { }
+
+extension Double: DynamoNumber { }
+extension Float: DynamoNumber { }
+extension Int: DynamoNumber { }
+extension Int8: DynamoNumber { }
+extension Int16: DynamoNumber { }
+extension Int32: DynamoNumber { }
+extension Int64: DynamoNumber { }
+extension UInt: DynamoNumber { }
+extension UInt8: DynamoNumber { }
+extension UInt16: DynamoNumber { }
+extension UInt32: DynamoNumber { }
+extension UInt64: DynamoNumber { }
