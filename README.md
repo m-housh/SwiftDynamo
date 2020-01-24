@@ -105,9 +105,9 @@ struct TodoStore {
 
 ## Status
 
-- [x] Supports Static Partition Keys and Sort Keys on Models
+- [x] Supports Static or Dynamic Partition Keys and Sort Keys on Models
 - [x] Basic equality filters on properties (note that you can not use `!=` on a partition key or sort key)
-- [x] Property wrappers for fields, dynamic sort-keys, and id.
+- [x] Property wrappers for fields, dynamic sort-keys, and id (id can be a partition key or a sort key).
 - [x] Supports random id generation for `UUID` (can be overriden to user generated)
 - [x] Test framework under the `XCTDynamo` folder (use in your tests by importing the package as a dependency)
 - [x] Custom encoder and decoder to convert `Codable` types to types that `aws-sdk-swift` expects.
