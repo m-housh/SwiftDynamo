@@ -78,7 +78,9 @@ extension DynamoDB.UpdateItemInput {
         assert(key.count > 0, "Invalid update item key")
 
         let options = query.optionsContainer
-        let attributeUpdates = try! query.input.reduceIntoAttributes().convertToAttributeUpdates()
+        let attributeUpdates = try! query.input
+            .reduceIntoAttributes()
+            .convertToAttributeUpdates()
 
         return .init(
             attributeUpdates: attributeUpdates,

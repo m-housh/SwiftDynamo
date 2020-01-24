@@ -336,7 +336,6 @@ internal struct _KeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
         guard let item = self.container[key.stringValue] else {
             throw DecodingError.notFound
         }
-
         decoder.codingPath.append(key)
         defer { self.decoder.codingPath.removeLast() }
 
@@ -925,13 +924,21 @@ extension _DynamoDecoder {
 
     func unbox<T>(_ value: Any, as type: T.Type) throws -> T? where T : Decodable {
         if let item = value as? T { return item }
-        return try unbox_(value, as: type) as? T
+        // attempt to check if the current value is a dynamo attribute / map that
+        // that needs unboxed as a nested codable.
+        if let dictionary = try? findAttribute(value)?.m { // nested codable
+            return try unbox(dictionary, as: type)
+        }
+
+        let unboxed = try unbox_(value, as: type) as? T
+        return unboxed
     }
 
     func unbox_(_ value: Any, as type: Decodable.Type) throws -> Any? {
         self.storage.pushContainer(container: value)
         defer { self.storage.popContainer() }
-        return try type.init(from: self)
+        let unboxed = try type.init(from: self)
+        return unboxed
     }
 
 }

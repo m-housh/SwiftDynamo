@@ -156,7 +156,7 @@ final class TodoModel: DynamoModel {
 
 ### Set as a field on the model.
 
-Any field also has flags in the initializer to declar it as a sort or partition key as well as some specialized fields.
+Any field also has flags in the initializer to declare it as a sort or partition key as well as some specialized fields.
 The `ID` field for example defaults to being a partition a key.  There is also a `SortKey` field.
 
 To change the behavior of an `ID` field it needs to be set at declaration.
@@ -197,13 +197,13 @@ set on a query.
 
 ```swift
 
-TodModel.query(on: dynamoDB)
+TodoModel.query(on: dynamoDB)
     .setSortKey(sortKey: "Foo", to: "Bar")
     .setPartitionKey(partitionKey: "Bar", to: "Foo")
     
 // or if you have a sort key field declared on the model.
 
-TodModel.query(on: dynamoDB)
+TodoModel.query(on: dynamoDB)
     .setSortKey(\.$sortKey, to: "Foo")
     
 // if you declared a field then you would use the `set` method on the query.
@@ -211,6 +211,51 @@ TodModel.query(on: dynamoDB)
 TodoModel.query(on: dynamoDB)
     .set(\.$partitionKey, to: "Partition")
     
+```
+
+## XCTDynamo
+
+A convenience package for testing your models.
+
+```swift
+
+import XCTest
+import XCTDynamo
+import TodoStore
+
+final class TodoStoreTests: XCTestCase, XCTDynamo {
+
+    var database: DynamoDB! = DynamoDB(endpoint: "http://localhost:8000")
+    
+    func testCRUD() throws {
+    
+        runTest { 
+            let todo = TodoModel(
+                id: .init(),
+                title: "Test", 
+                completed: false,
+                order: 1
+            )
+            
+            var beforeCount: Int!
+            
+            try fetchAll() { todos in 
+                beforeCount = todos.count
+            }
+            .save(todo) { saved in 
+                XCTAssertEqual(saved, todo)
+            }
+            .find(id: todo.id!) { fetched in 
+                XCTAssertNotNil(fetched)
+                XCTAssertEqual(fetched!, todo)
+            }
+            .fetchAll() { XCTAssertEqual($0.count, beforeCount + 1 }
+            .delete(id: todo.id!) { }
+            .fetchAll() { XCTAssertEqual($0.count, beforeCount) }
+        }
+    }
+}
+
 ```
 
 ## Status

@@ -57,6 +57,42 @@ final class DynamoModelTests: XCTestCase {
         XCTAssertEqual(decoded.list, [0, 1, 2, 3, 4])
     }
 
+    func testNestedCodables() throws {
+
+        struct Name: Codable {
+            let first: String
+            let last: String
+
+            init(first: String, last: String) {
+                self.first = first
+                self.last = last
+            }
+        }
+
+        final class ModelWithNestedCodable: DynamoModel {
+            static var schema: DynamoSchema = "foo"
+
+            @ID(key: "ID")
+            var id: UUID?
+
+            @Field(key: "Name")
+            var name: Name
+
+            init() { }
+        }
+
+        let model = ModelWithNestedCodable()
+        model.id = .init()
+        model.name = .init(first: "foo", last: "bar")
+
+        let converted = try DynamoConverter().convert(model)
+        print("Converted: \(converted)")
+        let data = try DynamoEncoder().encode(model)
+        let decoded = try DynamoDecoder().decode(ModelWithNestedCodable.self, from: data)
+        XCTAssertEqual(decoded.name.first, "foo")
+        XCTAssertEqual(decoded.name.last, "bar")
+    }
+
     static var allTests = [
         ("testExample", testExample),
     ]
