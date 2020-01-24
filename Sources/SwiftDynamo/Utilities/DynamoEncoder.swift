@@ -108,6 +108,7 @@ fileprivate class _DynamoArrayContainer: NSObject {
     enum ArrayType {
         case string
         case number
+        case list
     }
 
     /// The type of array this instance is for.
@@ -147,6 +148,13 @@ fileprivate class _DynamoArrayContainer: NSObject {
     /// If an array is empty it will not get encoded because we don't have a type reference.
     func serialize() throws -> DynamoDB.AttributeValue {
 
+        if type == .list {
+            guard let attributes = array as? [DynamoDB.AttributeValue] else {
+                fatalError("Invalid unkeyed attributes")
+            }
+            return DynamoDB.AttributeValue(l: attributes)
+        }
+
         guard let strings = array as? [String] else {
             fatalError("Casting to string array failed.")
         }
@@ -154,6 +162,8 @@ fileprivate class _DynamoArrayContainer: NSObject {
         switch type {
         case .number: return DynamoDB.AttributeValue(ns: strings)
         case .string: return DynamoDB.AttributeValue(ss: strings)
+        default:
+            fatalError("Invalid array type.")
         }
     }
 }
@@ -503,7 +513,9 @@ fileprivate struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
             encodingType = .number
             try self.encode(num)
         } else {
-            fatalError("Value must be a string or number.")
+            // a list of encodable types.
+            encodingType = .list
+            try value.encode(to: self.encoder)
         }
 
 //        // add our path to the coding path and add our string value to the container.

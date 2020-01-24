@@ -177,4 +177,20 @@ final class DynamoConverterTests: XCTestCase {
         XCTAssertEqual(result["BarKey"]?.s, "Bar")
         XCTAssertEqual(result["FooKey"]?.s, "Foo")
     }
+
+    func testListOfCustomEncodables() throws {
+        struct Name: Codable {
+            var first: String
+            var last: String
+        }
+
+        let names: [Name] = [
+            .init(first: "foo", last: "bar"),
+            .init(first: "joan", last: "jettson"),
+            .init(first: "boom", last: "bing")
+        ]
+
+        let converted = try DynamoConverter().convertToAttribute(names)
+        XCTAssertNotNil(converted.l)
+    }
 }
