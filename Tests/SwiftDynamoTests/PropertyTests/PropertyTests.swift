@@ -59,4 +59,81 @@ final class PropertyTests: XCTestCase {
 
         XCTAssertEqual(sortKey.key, "Foo")
     }
+
+    func testAnyFieldPassesToWrappedField() {
+        let model = TestModel()
+        let anyField = model._$id as AnyField
+        XCTAssertEqual(anyField.key, "TodoID")
+        XCTAssertNil(anyField.inputValue)
+        XCTAssertEqual(anyField.partitionKey, false)
+        XCTAssertEqual(anyField.sortKey, true)
+        let id = UUID.generateRandom()
+        anyField.inputValue = .bind(id)
+        let attributeValue = try! anyField.attributeValue()
+        XCTAssertEqual(id.uuidString, attributeValue!.s!)
+    }
+
+    func testAnyPropertyPassesToWrappedField() throws {
+        let model = TestModel()
+        model.id = .init()
+        let anyProperty = model.$id as AnyProperty
+        try anyProperty.encode(to: _DynamoEncoder())
+        try anyProperty.decode(from: _DynamoDecoder(referencing: "\(model.id!)"))
+    }
+
+    func testDefaultGeneratorForIDIsSetToUser() {
+        let id = ID<Int>(key: "Foo")
+        XCTAssertEqual(id.generator, .user)
+        XCTAssertEqual(ID<String>.Generator.default(for: String.self), .user)
+        XCTAssertEqual(ID<UUID>.Generator.default(for: UUID.self), .random)
+    }
+
+    func testAnyModelHasChangesAttribute() {
+        let model = TestModel()
+        XCTAssertFalse(model.hasChanges)
+        model.id = .init()
+        XCTAssertTrue(model.hasChanges)
+    }
+
+    func testAnyModelWithNonFields() {
+        final class ModelWithExtras: DynamoModel {
+
+            static var schema: DynamoSchema = "FooBar"
+
+            @ID(key: "Foo")
+            var id: Int?
+
+            @Field(key: "Bar")
+            var bar: String
+
+            var dummy = DummyProperty()
+
+            var extra: Bool = false
+
+            init() { }
+
+            class DummyProperty: AnyProperty {
+                func encode(to encoder: Encoder) throws {
+                    fatalError()
+                }
+
+                func decode(from decoder: Decoder) throws {
+                    fatalError()
+                }
+
+                func output(from output: DatabaseOutput) throws {
+                    fatalError()
+                }
+
+                init() { }
+            }
+        }
+
+        let properties = ModelWithExtras().properties
+        XCTAssert(!properties.contains(where: { $0.0 == "extra" }))
+
+        let fields = ModelWithExtras().fields
+        XCTAssert(!fields.contains(where: { $0.0 == "dummy" }))
+
+    }
 }

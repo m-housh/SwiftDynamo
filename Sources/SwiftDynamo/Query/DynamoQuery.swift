@@ -274,30 +274,27 @@ extension DynamoQuery.OptionsContainer {
         if filterExpression == nil {
             filterExpression = "\(key) \(method) \(expression)"
         } else {
-            filterExpression = " and \(key) \(method) \(expression)"
+            filterExpression! += " and \(key) \(method) \(expression)"
         }
     }
 
     init(query: DynamoQuery) {
-        // create the container and set the default options.
+        // create the container and set the options.
         var options = query.options
             .reduce(into: Self()) { $1.setOption(&$0) }
 
+        // Add filter expressions.
         if query.filters.count > 0 {
             for filter in query.filters {
                 switch filter {
                 case let .field(fieldKey, method, value):
-
-                    // set non-key condition filters.
-                    if !(options.expressionAttributeValues?.contains(where: { $0.key == fieldKey.key }) ?? false) {
-                        let expression = ":\(fieldKey.key)"
-                        options.setExpressionAttribute(expression, try! value.attributeValue())
-                        if (fieldKey.isPartitionKey || fieldKey.isSortKey) {
-                            options.addKeyConditionExpression(fieldKey.key, method, expression)
-                        }
-                        else {
-                            options.addFilterExpression(fieldKey.key, method, expression)
-                        }
+                    let expression = ":\(fieldKey.key)"
+                    options.setExpressionAttribute(expression, try! value.attributeValue())
+                    if (fieldKey.isPartitionKey || fieldKey.isSortKey) {
+                        options.addKeyConditionExpression(fieldKey.key, method, expression)
+                    }
+                    else {
+                        options.addFilterExpression(fieldKey.key, method, expression)
                     }
                 }
             }

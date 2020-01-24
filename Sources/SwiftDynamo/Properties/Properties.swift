@@ -21,22 +21,6 @@ public protocol AnyProperty: class {
     func output(from output: DatabaseOutput) throws
 }
 
-// Delegate responsibilities to the fields.
-extension AnyProperty where Self: FieldRepresentible {
-
-    public func encode(to encoder: Encoder) throws {
-        try field.encode(to: encoder)
-    }
-
-    public func decode(from decoder: Decoder) throws {
-        try field.decode(from: decoder)
-    }
-
-    public func output(from output: DatabaseOutput) throws {
-        try field.output(from: output)
-    }
-}
-
 /// A database field that is attached to a model.  This could be an id, a sort key, or a regular database field.
 public protocol AnyField: AnyProperty {
 
@@ -50,8 +34,12 @@ public protocol AnyField: AnyProperty {
     /// Convert ourself to a valid `DynamoDB.AttributeValue`
     func attributeValue() throws -> DynamoDB.AttributeValue?
 
+    /// A flag for if the field is a sort key.
+    /// A sort key gets treated differently in queries and filter operations than a standard field.
     var sortKey: Bool { get }
 
+    /// A flag for if the field is a partition key.
+    /// A partition key gets treated differently in queries and filter operations than a standard field.
     var partitionKey: Bool { get }
 }
 
@@ -96,8 +84,12 @@ extension AnyField where Self: FieldRepresentible {
         try self.field.attributeValue()
     }
 
-    public var description: String {
-        "AnyField(key: \(key), sortKey: \(sortKey), partitionKey: \(partitionKey))"
+    public var sortKey: Bool {
+        field.sortKey
+    }
+
+    public var partitionKey: Bool {
+        field.partitionKey
     }
 }
 

@@ -22,7 +22,7 @@ extension UUID: RandomGeneratable {
 
 /// An identifier field.
 @propertyWrapper
-public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
+public class ID<Value>: AnyID, FieldRepresentible, AnyField where Value: Codable {
 
     /// How the id get's generated.
     public enum Generator {
@@ -59,21 +59,9 @@ public class ID<Value>: AnyID, FieldRepresentible where Value: Codable {
         set { self.field.wrappedValue = newValue }
     }
 
-    // The database key, delegated to our `field`.
-    public var key: String { self.field.key }
-
-    // The value used in queries, delegated to our `field`.
-    public var inputValue: DynamoQuery.Value? {
-        get { self.field.inputValue }
-        set { self.field.inputValue = newValue }
-    }
-
     // Expose ourself through the `$` prefix.
     public var projectedValue: ID<Value> { self }
 
-    public var sortKey: Bool { field.sortKey }
-
-    public var partitionKey: Bool { field.partitionKey }
 
     /// Create a new instance.
     ///

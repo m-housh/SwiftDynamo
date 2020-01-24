@@ -27,6 +27,36 @@ final class DynamoModelTests: XCTestCase {
         XCTAssertEqual(asDynamoAttributes["order"]?.n!, "\(model.order!)")
     }
 
+    func testModelEncodingWithADictValue() throws {
+        final class ModelWithDict: DynamoModel {
+
+            static var schema: DynamoSchema = "foo"
+
+            @ID(key: "foo")
+            var id: Int?
+
+            @Field(key: "dict")
+            var dict: [String: String]
+
+            @Field(key: "list")
+            var list: [Int]
+
+            init() { }
+
+        }
+
+        let model = ModelWithDict()
+        model.id = 1
+        model.dict = ["bar": "baz"]
+        model.list = [0, 1, 2, 3, 4]
+
+        let encoded = try JSONEncoder().encode(model)
+        let decoded = try JSONDecoder().decode(ModelWithDict.self, from: encoded)
+        XCTAssertEqual(decoded.id!, 1)
+        XCTAssertEqual(decoded.dict, ["bar": "baz"])
+        XCTAssertEqual(decoded.list, [0, 1, 2, 3, 4])
+    }
+
     static var allTests = [
         ("testExample", testExample),
     ]

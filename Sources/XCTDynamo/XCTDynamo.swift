@@ -11,6 +11,7 @@ import SwiftDynamo
 
 public protocol XCTDynamoTestCase {
     var database: DynamoDB { get }
+    var seeds: [Model] { get }
     associatedtype Model: DynamoModel
 }
 
@@ -23,6 +24,17 @@ extension XCTDynamoTestCase where Self: XCTestCase {
     ) throws -> Self
     {
         let model = try model.save(on: database).wait()
+        callback(model)
+        return self
+    }
+
+    @discardableResult
+    public func update(
+        _ model: Model,
+        callback: @escaping (Model) -> ()
+    ) throws -> Self
+    {
+        let model = try model.update(on: database).wait()
         callback(model)
         return self
     }
@@ -80,14 +92,25 @@ extension XCTDynamoTestCase where Self: XCTestCase {
         _ function: StaticString = #function,
         _ file: String = #file,
         _ line: Int = #line,
+        seed: Bool = false,
+        deleteAll: Bool = true,
         closure: () throws -> ()
     ) throws {
+
         do {
+            if seed == true {
+                _ = try seeds.map { try save($0) {_ in } }
+            }
             try closure()
         }
         catch {
             print("error: \(error)", function, file, line)
             throw error
         }
+
+        if deleteAll == true {
+            self.deleteAll()
+        }
+
     }
 }

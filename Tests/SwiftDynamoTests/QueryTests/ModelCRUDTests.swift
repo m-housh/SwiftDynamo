@@ -17,11 +17,10 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
     typealias Model = TestModel
 
     func testFetchAll() throws {
-        deleteAll()
-        saveSeeds()
-
-        try self.fetchAll() { models in
-            XCTAssertEqual(models.count, self.seeds.count)
+        try runTest(seed: true) {
+            try self.fetchAll() { models in
+                XCTAssertEqual(models.count, self.seeds.count)
+            }
         }
     }
 
@@ -86,6 +85,26 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             }
 
             random.title = "Updated"
+            try update(random) { saved in
+                XCTAssertEqual(random, saved)
+                XCTAssertEqual(saved.title, "Updated")
+            }
+            .fetchAll() {
+                XCTAssertEqual(beforeCount, $0.count)
+            }
+        }
+    }
+
+    func testUpdate2() throws {
+        try runTest(seed: true) {
+            var random: TestModel!
+            var beforeCount: Int = 0
+            try fetchAll() {
+                random = $0.randomElement()!
+                beforeCount = $0.count
+            }
+
+            random.title = "Updated"
             try save(random) { saved in
                 XCTAssertEqual(random, saved)
                 XCTAssertEqual(saved.title, "Updated")
@@ -93,7 +112,6 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             .fetchAll() {
                 XCTAssertEqual(beforeCount, $0.count)
             }
-
         }
     }
 
@@ -124,6 +142,39 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             .fetchAll() {
                 XCTAssertEqual($0.count, beforeCount)
             }
+        }
+    }
+
+    func testUpdatesWithPatch2() throws {
+        try runTest(seed: true) {
+            var random: TestModel!
+            var beforeCount: Int!
+
+            try fetchAll() {
+                random = $0.randomElement()!
+                beforeCount = $0.count
+            }
+            let data: [String: DynamoQuery.Value] = [
+                "Title": .bind("FooBar"),
+                "Completed": .bind(true)
+            ]
+
+            try TestModel
+                .query(on: database)
+                .filter(\.$id == random.id)
+                .set(data)
+                .update()
+                .wait()
+
+            try fetchAll() {
+                XCTAssertEqual($0.count, beforeCount)
+            }
+            .find(id: random.id!) { updated in
+                XCTAssertNotNil(updated)
+                XCTAssertEqual(updated?.title, "FooBar")
+                XCTAssertEqual(updated?.completed, true)
+            }
+
         }
     }
 
@@ -256,29 +307,4 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         TestModel(id: .init(), title: "Six", completed: false, order: 6)
     ]
 
-
-    func saveSeeds() {
-        _ = seeds.map { try! $0.save(on: database).wait() }
-    }
-
-    func runTest(
-        _ function: StaticString = #function,
-        _ file: String = #file,
-        _ line: Int = #line,
-        seed: Bool = false,
-        closure: () throws -> ()) throws
-    {
-        if seed == true {
-            saveSeeds()
-        }
-        do {
-            try closure()
-            deleteAll()
-        }
-        catch {
-            deleteAll()
-            print("Error: \(error)", file, line, function)
-            throw error
-        }
-    }
 }
