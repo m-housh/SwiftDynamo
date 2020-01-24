@@ -7,6 +7,12 @@ create_table:
 		--endpoint-url $(ENDPOINT) \
 		--cli-input-json file://dynamo/create_table.json
 
+create_partition_only_table:
+	@aws dynamodb create-table \
+		--endpoint-url $(ENDPOINT) \
+		--cli-input-json file://dynamo/create_table_partition_key_only.json
+
+
 
 create_todo:
 	@aws dynamodb put-item \

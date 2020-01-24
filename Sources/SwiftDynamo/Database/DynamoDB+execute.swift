@@ -44,11 +44,8 @@ extension DynamoDB {
         _ query: DynamoQuery,
         onResult callback: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
-        // MARK: - TODO
-        //      This will likely need updated to use a partition key as the
-        //      differentiator.
 
-        if query.sortKey == nil && query.partitionKey == nil {
+        if _shouldUseScan(for: query) {
             // use scan.
             return self.scan(.init(tableName: query.schema.tableName))
                 .map { output in
@@ -61,6 +58,18 @@ extension DynamoDB {
                     callback(.init(database: self, output: .list(output.items!)))
                 }
         }
+    }
+
+    private func _shouldUseScan(for query: DynamoQuery) -> Bool {
+        if query.sortKey != nil || query.partitionKey != nil {
+            return false
+        }
+        // check options
+        let options = query.optionsContainer
+
+        if let _ = options.keyConditionExpression { return false }
+
+        return true
     }
 
     // Create a single item in the database.
