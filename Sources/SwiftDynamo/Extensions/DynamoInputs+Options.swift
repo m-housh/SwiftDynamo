@@ -136,7 +136,11 @@ extension DynamoQuery.Value {
 
     func attributeValue() throws -> DynamoDB.AttributeValue {
         switch self {
-        case let .bind(encodable): return try encodable.convertToAttribute()
+        case let .bind(encodable):
+            if let _ = encodable as? DynamoDB.AttributeValue {
+                return encodable as! DynamoDB.AttributeValue
+            }
+            return try encodable.convertToAttribute()
         case let .dictionary(dictionary):
             return .init(m: try dictionary.convertToAttributes())
         }

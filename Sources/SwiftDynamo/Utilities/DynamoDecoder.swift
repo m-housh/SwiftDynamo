@@ -666,6 +666,7 @@ internal struct _UnkeyedDecoder: UnkeyedDecodingContainer {
 
         let item = self.container[self.currentIndex]
 
+        print("UnkeyedContainer.nestedContainer")
         guard let dictionary = item as? [String: Any] else {
             throw DecodingError.typeMismatch(expected: [String: Any].self)
         }
@@ -803,6 +804,9 @@ extension _DynamoDecoder {
             }
             return dictionary.first!.value
         }
+        if let array = value as? [DynamoDB.AttributeValue] {
+            return array.first
+        }
 
         throw DecodingError.notFound
     }
@@ -922,12 +926,34 @@ extension _DynamoDecoder {
         return UInt64(numberString)
     }
 
+    func unbox_<T>(_ values: [Any], as type: [T].Type) throws -> [T] where T: Decodable {
+        try values.map { try unbox($0, as: T.self)! }
+    }
+
     func unbox<T>(_ value: Any, as type: T.Type) throws -> T? where T : Decodable {
         if let item = value as? T { return item }
-        // attempt to check if the current value is a dynamo attribute / map that
-        // that needs unboxed as a nested codable.
-        if let dictionary = try? findAttribute(value)?.m { // nested codable
-            return try unbox(dictionary, as: type)
+
+        let optionalAttribute = try? findAttribute(value)
+
+        // Test for if the value we are decoding are dynamo attribute lists or maps and
+        // decode them correctly.
+        if let attribute = optionalAttribute {
+            // unbox a map attribute
+            if let dictionary = attribute.m { // nested codable
+                return try unbox(dictionary, as: type)
+            }
+
+            // unbox a list attribute.
+            if let array = attribute.l { // nested array
+                do {
+                    // this is used / succeeds when array elements hold other dynamo attribute values
+                    return try unbox_(array, as: type) as? T
+                }
+                catch {
+                    // this is used / succeed when array elements are normal decodable types.
+                    return try unbox(array, as: type)
+                }
+            }
         }
 
         let unboxed = try unbox_(value, as: type) as? T
@@ -937,6 +963,7 @@ extension _DynamoDecoder {
     func unbox_(_ value: Any, as type: Decodable.Type) throws -> Any? {
         self.storage.pushContainer(container: value)
         defer { self.storage.popContainer() }
+
         let unboxed = try type.init(from: self)
         return unboxed
     }

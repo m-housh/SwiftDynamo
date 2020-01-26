@@ -47,10 +47,11 @@ public struct DatabaseOutput {
             throw DynamoModelError.notFound
         }
 
-        guard let decoded = try? DynamoDecoder().decode(type, from: attribute) else {
-            throw DynamoModelError.attributeError
+        do {
+            return try DynamoDecoder().decode(type, from: attribute)
         }
-
-        return decoded
+        catch {
+            throw DynamoModelError.invalidField(key: field, valueType: type, error: error)
+        }
     }
 }

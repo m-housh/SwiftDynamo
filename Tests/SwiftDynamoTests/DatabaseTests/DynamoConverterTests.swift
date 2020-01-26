@@ -196,9 +196,27 @@ final class DynamoConverterTests: XCTestCase {
         let firsts = ["foo", "joan", "boom"]
         let lasts = ["bar", "jettson", "bing"]
 
+        XCTAssertEqual(attributes.count, names.count)
         for (first, last) in attributes {
             XCTAssert(firsts.contains(first))
             XCTAssert(lasts.contains(last))
         }
+
+    }
+}
+
+extension DynamoDB.AttributeValue: CustomStringConvertible {
+
+
+    public var description: String {
+        let string = self.s ?? "nil"
+        let numString = self.n ?? "nil"
+        let listString = self.l != nil ? "\(self.l!)" : "nil"
+        let mapString = self.m != nil ? "\(self.m!)" : "nil"
+        let stringSet = self.ss != nil ? "\(self.ss!)" : "nil"
+        let numSet = self.ns != nil ? "\(self.ns!)" : "nil"
+
+
+        return "AttributeValue(s: \(string), n: \(numString), l: \(listString), m: \(mapString), ss: \(stringSet), ns: \(numSet))"
     }
 }

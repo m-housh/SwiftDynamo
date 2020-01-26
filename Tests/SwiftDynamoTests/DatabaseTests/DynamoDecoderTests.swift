@@ -324,4 +324,29 @@ final class DynamoDecoderTests: XCTestCase {
         let simpleData = try DynamoEncoder().encode(1)
         XCTAssertEqual(try DynamoDecoder().decode(Int.self, from: simpleData), 1)
     }
+
+
+    func testDecodingListOfEncodables() throws {
+        struct Name: Codable {
+            let first: String = "foo"
+            let last: String = "bar"
+        }
+
+        let encoded = try DynamoEncoder().encode([Name(), Name()])
+        let decoded = try DynamoDecoder().decode([Name].self, from: encoded)
+        XCTAssertEqual(decoded.count, 2)
+
+        struct Person: Codable {
+            let names: [Name] = [Name(), Name()]
+        }
+
+        let pencoded = try DynamoEncoder().encode(Person())
+        let pdecodded = try DynamoDecoder().decode(Person.self, from: pencoded)
+        XCTAssertEqual(pdecodded.names.count, 2)
+
+        let converted = try DynamoConverter().convert(Person())
+        let cDecoded = try DynamoDecoder().decode(Person.self, from: converted)
+        XCTAssertEqual(cDecoded.names.count, 2)
+    }
+
 }

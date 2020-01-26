@@ -104,7 +104,7 @@ extension XCTDynamoTestCase where Self: XCTestCase {
             try closure()
         }
         catch {
-            print("error: \(error)", function, file, line)
+            print("error: \(error.localizedDescription)", function, file, line)
             throw error
         }
 

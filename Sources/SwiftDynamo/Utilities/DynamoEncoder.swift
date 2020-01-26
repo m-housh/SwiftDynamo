@@ -149,10 +149,15 @@ fileprivate class _DynamoArrayContainer: NSObject {
     func serialize() throws -> DynamoDB.AttributeValue {
 
         if type == .list {
-            guard let attributes = array as? [DynamoDB.AttributeValue] else {
-                fatalError("Invalid unkeyed attributes")
+            if let attributes = array as? [DynamoDB.AttributeValue] {
+                return DynamoDB.AttributeValue(l: attributes)
             }
-            return DynamoDB.AttributeValue(l: attributes)
+
+            if let attributes = array as? [[String: DynamoDB.AttributeValue]] {
+                return DynamoDB.AttributeValue(l: attributes.map { .init(m: $0) })
+            }
+
+            fatalError("Invalid un-keyed attributes")
         }
 
         guard let strings = array as? [String] else {
@@ -437,6 +442,7 @@ fileprivate struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
     }
 
     var count: Int { container.array.count }
+
     /// - SeeAlso: `Encoder`
     mutating func encodeNil() throws { fatalError("Value must be a string or number.") }
     /// - SeeAlso: `Encoder`
@@ -513,10 +519,10 @@ fileprivate struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
             encodingType = .number
             try self.encode(num)
         } else {
-            // a list of encodable types.  We properly encode here, however
-            // dynamodb only supports lists of strings, numbers, or data.
+            // a list of encodable types
             encodingType = .list
-            try value.encode(to: self.encoder)
+            try container.array.add(self.encoder.box(value))
+
         }
 
 //        // add our path to the coding path and add our string value to the container.
@@ -704,7 +710,9 @@ extension _DynamoEncoder {
     }
 
     func box(_ value: Encodable) throws -> NSObject {
-        try self.box_(value) ?? NSMutableDictionary()
+        let boxed = try self.box_(value)
+//        print(boxed != nil ? "\(boxed!)" : "failed to box \(value)")
+        return boxed ?? NSMutableDictionary()
     }
 
     // Boxes an encodable using the current stack, then pops it off and returns it,
@@ -741,7 +749,9 @@ extension _DynamoEncoder {
             return nil
         }
 
-        return self.storage.popContainer()
+        let boxed = self.storage.popContainer()
+        return boxed
+//        return self.storage.popContainer()
     }
 }
 

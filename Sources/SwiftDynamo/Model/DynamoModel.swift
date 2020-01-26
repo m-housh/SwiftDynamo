@@ -107,7 +107,7 @@ private struct _ModelDecoder: Decoder, SingleValueDecodingContainer {
     }
 
     func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
-        try container.decode(type, forKey: key)
+        return try container.decode(type, forKey: key)
     }
 
     func decodeNil() -> Bool {
@@ -122,7 +122,6 @@ private struct _ModelDecoder: Decoder, SingleValueDecodingContainer {
 
 extension AnyModel {
 
-    // this can probably go away.
     var input: [String: DynamoQuery.Value] {
         var input = [String: DynamoQuery.Value]()
         for (_, field) in self.fields {

@@ -37,6 +37,19 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
     // MARK: - Set
 
+    // MARK: - TODO
+    //          Add a `.set(_ encodable: Encodable)` to allow easier way to
+    //          create `PATCH` request representations, this should also include
+    //          a way to tell if the value is an optional and is `nil` and not `set`
+    //          a value if the model expects a non-optional, if the model expects an
+    //          optional we would probably want to send it as there is no way to tell
+    //          if it's an update or not.
+    //
+    //          We could then most likely remove the `.set(_ data: _)` method or make it internal.
+    //
+    //          We would also need to make sure that it is an object that has `Fields`, so not exactly
+    //          sure how to play that, perhaps the 
+
     @discardableResult
     public func setSortKey(sortKey key: String, to value: Encodable) -> Self {
         query.sortKey = (key, .bind(value))
@@ -59,7 +72,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     public func setAction(action: DynamoQuery.Action) -> Self {
         return self.action(action)
     }
-
 
     @discardableResult
     public func set(_ data: [String: DynamoQuery.Value]) -> Self {

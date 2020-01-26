@@ -366,12 +366,12 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
 
             let random = seeds.last!
 
-            let builder = PartitionTodo.query(on: database).filter(\.$id == random.id!)
-            print(builder.query.options)
-            print(builder.query.optionsContainer)
+//            let builder = PartitionTodo.query(on: database).filter(\.$id == random.id!)
 
             let fetched = try PartitionTodo.find(id: random.id!, on: database).wait()
             XCTAssertEqual(random.id, fetched!.id)
+
+            _ = try seeds.map { try PartitionTodo.delete(id: $0.id!, on: database).wait() }
         }
     }
 
@@ -415,6 +415,102 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         XCTAssertEqual(saved.titles.count, 0)
         XCTAssertEqual(saved.names.count, 0)
 
+        try PartitionTodo.delete(id: model.id!, on: database).wait()
+
+    }
+
+    func testListsOfEncodablesWorkCorrectly() throws {
+        final class PartitionTodo: DynamoModel {
+            static var schema: DynamoSchema = "TodoPartitionTest"
+
+            @ID(key: "TodoID", type: .partitionKey)
+            var id: UUID?
+
+            @Field(key: "Completed")
+            var completed: Bool
+
+            @Field(key: "Order")
+            var order: Int?
+
+            @Field(key: "Names")
+            var names: [Name]
+
+            init() { }
+
+            struct Name: Codable {
+                var first: String
+                var last: String
+            }
+        }
+
+        let model = PartitionTodo()
+        model.id = .init()
+        model.completed = false
+        model.order = 1
+        model.names = [.init(first: "foo", last: "bar"), .init(first: "joan", last: "jett")] // test with non-primitive types
+
+        let saved = try model.save(on: database).wait()
+        XCTAssertEqual(saved.names.count, 2)
+//
+//        let all = try PartitionTodo.query(on: database).first().wait()
+//        print(all)
+
+        let fetched = try PartitionTodo.find(id: model.id!, on: database).wait()
+        XCTAssertNotNil(fetched)
+        XCTAssertEqual(fetched!.names.count, 2)
+        let firsts = ["foo", "joan"]
+        let lasts = ["bar", "jett"]
+        let fetchedFirsts = fetched!.names.map { $0.first }
+        let fetchedLasts = fetched!.names.map { $0.last }
+
+        for first in fetchedFirsts { XCTAssert(firsts.contains(first)) }
+        for last in fetchedLasts { XCTAssert(lasts.contains(last)) }
+
+        let _all = try PartitionTodo.query(on: database).all().wait()
+
+        _ = try _all.map { try PartitionTodo.delete(id: $0.id!, on: database).wait() }
+
+    }
+
+    func testWithSortKeyAsRelationshipKey() {
+        final class RelationTodo: DynamoModel {
+            static var schema: DynamoSchema {
+                .init("Todo", sortKey: .init(key: "SortKey", default: "Keys"))
+            }
+
+            @ID(key: "TodoID", type: .partitionKey)
+            var id: UUID?
+
+            @Field(key: "Title")
+            var titles: [String]
+
+            init() { }
+
+        }
+
+        final class TodoDetails: DynamoModel {
+            static var schema: DynamoSchema {
+                .init("Todo", sortKey: .init(key: "SortKey", default: "Details"))
+            }
+
+            @ID(key: "DetailsID", type: .none)
+            var id: UUID?
+
+            @Field(key: "TodoID", partitionKey: true)
+            var todoID: UUID
+
+            init() { }
+
+        }
+
+        let builder = RelationTodo.query(on: database).query.optionsContainer
+        print(builder)
+
+        let relation = TodoDetails
+            .query(on: database)
+            .filter(\.$todoID == UUID())
+
+        print(relation.query.optionsContainer)
     }
 
     // MARK: - Helpers

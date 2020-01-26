@@ -37,6 +37,10 @@ extension DynamoDB {
             .map { _ in }
     }
 
+    // MARK: - TODO
+    //          We need to build a filter expression for scan and
+    //          only run query if both a partition key is available
+    
     // run a read query.
     // If no sort key / partition keys are on the query then we use
     // the more intrusive `scan`.  We use `query` otherwise.
@@ -60,6 +64,11 @@ extension DynamoDB {
         }
     }
 
+    // MARK: - TODO
+    //          This needs to be based off of partition key only,
+    //          to allow for scan to be used with a sort-key to filter
+    //          the results.  We also need to build the filter expression
+    //          for a scan request instead of scanning entire table.
     private func _shouldUseScan(for query: DynamoQuery) -> Bool {
         if query.sortKey != nil || query.partitionKey != nil {
             return false
