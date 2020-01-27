@@ -159,20 +159,19 @@ fileprivate class _DynamoArrayContainer: NSObject {
                 return DynamoDB.AttributeValue(l: attributes)
             }
 
-            // depending on how values were encoded, this covers the case of
-            // an encodable that converted to `string`: `attribute`.
-            if let attributes = array as? [[String: DynamoDB.AttributeValue]] {
-                return DynamoDB.AttributeValue(l: attributes.map { .init(m: $0) })
-            }
-
-            // depending on how values were encoded, this covers the case of
-            // an encodable that converted to `string`: `container`.
-            if let attributes = array as? [[String: _DynamoSingleValueContainer]] {
-
+            if let attributes = array as? [[String: Any]] {
                 let converted = attributes.reduce(into: [DynamoDB.AttributeValue]()) { result, item in
                     var values = [String: DynamoDB.AttributeValue]()
                     for (key, value) in item {
-                        values[key] = value.attribute
+                        if let attribute = value as? DynamoDB.AttributeValue {
+                            values[key] = attribute
+                        }
+                        else if let container = value as? _DynamoSingleValueContainer {
+                            values[key] = container.attribute
+                        }
+                        else {
+                            fatalError("Invalid item found in array: \(value)")
+                        }
                     }
                     result.append(.init(m: values))
                 }
@@ -182,7 +181,7 @@ fileprivate class _DynamoArrayContainer: NSObject {
 
             // the array contains a type we don't know how to handle /
             // didn't get encoded properly.
-            fatalError("Invalid un-keyed attributes")
+            fatalError("Invalid un-keyed attributes: \(array)")
         }
 
         guard let strings = array as? [String] else {

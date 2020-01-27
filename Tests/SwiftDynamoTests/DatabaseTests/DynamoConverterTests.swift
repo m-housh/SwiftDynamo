@@ -234,6 +234,46 @@ final class DynamoConverterTests: XCTestCase {
         let decoded = try DynamoDecoder().decode([HasEnumValue].self, from: encoded)
         XCTAssertEqual(decoded, list)
     }
+
+    func testConvertingWithEnum2() throws {
+        struct Person: Codable, Equatable {
+
+            let phoneNumbers: [PhoneNumber]
+            let foo = "bar"
+
+            public struct PhoneNumber: Codable, Equatable {
+
+                public var number: String
+                public var type: PhoneType
+                public var owner: PhoneOwner
+
+                public init(
+                    _ number: String,
+                    type: PhoneType = .home,
+                    owner: PhoneOwner = .compnay)
+                {
+                    self.number = number
+                    self.type = type
+                    self.owner = owner
+                }
+
+
+                public enum PhoneType: String, Codable {
+                    case iPhone, mobile, home, office
+                }
+
+                public enum PhoneOwner: String, Codable {
+                    case personal, compnay
+                }
+            }
+        }
+
+        let person = Person(phoneNumbers: [.init("123.123.4567")])
+        print(try DynamoConverter().convert(person))
+        let encoded = try JSONEncoder().encode(try DynamoConverter().convert(person))
+        let decoded = try DynamoDecoder().decode(Person.self, from: encoded)
+        XCTAssertEqual(decoded, person)
+    }
 }
 
 extension DynamoDB.AttributeValue: CustomStringConvertible {
@@ -246,8 +286,9 @@ extension DynamoDB.AttributeValue: CustomStringConvertible {
         let mapString = self.m != nil ? "\(self.m!)" : "nil"
         let stringSet = self.ss != nil ? "\(self.ss!)" : "nil"
         let numSet = self.ns != nil ? "\(self.ns!)" : "nil"
+        let nullString = self.null != nil ? "\(self.null!)" : "nil"
 
 
-        return "AttributeValue(s: \(string), n: \(numString), l: \(listString), m: \(mapString), ss: \(stringSet), ns: \(numSet))"
+        return "AttributeValue(s: \(string), n: \(numString), l: \(listString), m: \(mapString), ss: \(stringSet), ns: \(numSet), null: \(nullString))"
     }
 }

@@ -44,7 +44,6 @@ public struct DynamoDecoder {
     ///     - type: The type to decode from the attribute.
     ///     - data: The data to decode the values from.
     public func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
-
         do {
                 // try to decode the data as dictionary of attributes.
             let dict = try JSONDecoder().decode([String: DynamoDB.AttributeValue].self, from: data)
@@ -666,7 +665,6 @@ internal struct _UnkeyedDecoder: UnkeyedDecodingContainer {
 
         let item = self.container[self.currentIndex]
 
-        print("UnkeyedContainer.nestedContainer")
         guard let dictionary = item as? [String: Any] else {
             throw DecodingError.typeMismatch(expected: [String: Any].self)
         }
@@ -788,7 +786,6 @@ extension _DynamoDecoder: SingleValueDecodingContainer {
         try expectNonNil()
         return try self.unbox(self.storage.topContainer, as: T.self)!
     }
-
 
 }
 
@@ -926,10 +923,6 @@ extension _DynamoDecoder {
         return UInt64(numberString)
     }
 
-    func unbox_<T>(_ values: [Any], as type: [T].Type) throws -> [T] where T: Decodable {
-        try values.map { try unbox($0, as: T.self)! }
-    }
-
     func unbox<T>(_ value: Any, as type: T.Type) throws -> T? where T : Decodable {
         if let item = value as? T { return item }
 
@@ -958,6 +951,10 @@ extension _DynamoDecoder {
 
         let unboxed = try unbox_(value, as: type) as? T
         return unboxed
+    }
+
+    func unbox_<T>(_ values: [Any], as type: [T].Type) throws -> [T] where T: Decodable {
+        return try values.map { try unbox($0, as: T.self)! }
     }
 
     func unbox_(_ value: Any, as type: Decodable.Type) throws -> Any? {
