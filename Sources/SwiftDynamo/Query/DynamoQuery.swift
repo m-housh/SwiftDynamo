@@ -97,6 +97,10 @@ extension DynamoQuery {
         case read
         case update
         case delete
+
+        // force aws specific query type
+        case scan
+        case query
     }
 
     /// Value types that can be passed to the database.  These should typically not need to be

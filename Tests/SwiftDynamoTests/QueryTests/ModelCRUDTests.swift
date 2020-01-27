@@ -195,7 +195,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
 
             patch.patchQuery(&query)
             let saved = try query
-                .setAction(action: .update)
+                .setAction(to: .update)
                 .first()
                 .wait()
 

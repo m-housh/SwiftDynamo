@@ -203,6 +203,37 @@ final class DynamoConverterTests: XCTestCase {
         }
 
     }
+
+    func testConvertingWithCodableEnum() throws {
+        struct HasEnumValue: Codable, Equatable {
+            enum SomeEnum: String, Codable {
+                case some, none
+            }
+
+            let someOrNone: SomeEnum
+        }
+
+
+        let some = HasEnumValue(someOrNone: .some)
+        let none = HasEnumValue(someOrNone: .none)
+
+        let converted = try DynamoConverter().convertToAttribute(HasEnumValue.SomeEnum.some)
+        XCTAssertEqual(converted.s!, "some")
+
+        let list = [some, none]
+
+        let convertedList = try DynamoConverter().convertToAttribute(list)
+
+        for each in convertedList.l! {
+            let strings = ["some", "none"]
+            XCTAssertNotNil(each.m)
+            XCTAssert(strings.contains(each.m!["someOrNone"]!.s!))
+        }
+
+        let encoded = try DynamoEncoder().encode(list)
+        let decoded = try DynamoDecoder().decode([HasEnumValue].self, from: encoded)
+        XCTAssertEqual(decoded, list)
+    }
 }
 
 extension DynamoDB.AttributeValue: CustomStringConvertible {

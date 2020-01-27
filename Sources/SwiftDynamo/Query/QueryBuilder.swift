@@ -69,7 +69,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
-    public func setAction(action: DynamoQuery.Action) -> Self {
+    public func setAction(to action: DynamoQuery.Action) -> Self {
         return self.action(action)
     }
 

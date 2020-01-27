@@ -21,7 +21,7 @@ extension DynamoDB {
         onResult callback: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         switch query.action {
-        case .read: return _read(query, onResult: callback)
+        case .read, .scan, .query: return _read(query, onResult: callback)
         case .create: return _create(query, onResult: callback)
         case .update: return _update(query, onResult: callback)
         case .delete: return _delete(query)
@@ -70,6 +70,8 @@ extension DynamoDB {
     //          the results.  We also need to build the filter expression
     //          for a scan request instead of scanning entire table.
     private func _shouldUseScan(for query: DynamoQuery) -> Bool {
+        if query.action == .scan { return true }
+        if query.action == .query { return false }
         if query.sortKey != nil || query.partitionKey != nil {
             return false
         }

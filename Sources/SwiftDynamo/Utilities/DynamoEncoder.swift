@@ -43,11 +43,14 @@ public struct DynamoEncoder {
         }
         if let singleValue = topContainer as? _DynamoSingleValueContainer {
             return singleValue.attribute
-        } else if let dictionary = topContainer as? NSMutableDictionary {
+        }
+        else if let dictionary = topContainer as? NSMutableDictionary {
             return .init(m: try parseDict(dictionary))
-        } else if let array = topContainer as? _DynamoArrayContainer {
+        }
+        else if let array = topContainer as? _DynamoArrayContainer {
             return try array.serialize()
-        } else {
+        }
+        else {
             fatalError("Failed to encode: \(encodable)")
         }
     }
@@ -149,14 +152,36 @@ fileprivate class _DynamoArrayContainer: NSObject {
     func serialize() throws -> DynamoDB.AttributeValue {
 
         if type == .list {
+            // Non primitive types in the array.
+
+            // an array of items that have been completely converted to dynamo attributes.
             if let attributes = array as? [DynamoDB.AttributeValue] {
                 return DynamoDB.AttributeValue(l: attributes)
             }
 
+            // depending on how values were encoded, this covers the case of
+            // an encodable that converted to `string`: `attribute`.
             if let attributes = array as? [[String: DynamoDB.AttributeValue]] {
                 return DynamoDB.AttributeValue(l: attributes.map { .init(m: $0) })
             }
 
+            // depending on how values were encoded, this covers the case of
+            // an encodable that converted to `string`: `container`.
+            if let attributes = array as? [[String: _DynamoSingleValueContainer]] {
+
+                let converted = attributes.reduce(into: [DynamoDB.AttributeValue]()) { result, item in
+                    var values = [String: DynamoDB.AttributeValue]()
+                    for (key, value) in item {
+                        values[key] = value.attribute
+                    }
+                    result.append(.init(m: values))
+                }
+
+                return DynamoDB.AttributeValue(l: converted)
+            }
+
+            // the array contains a type we don't know how to handle /
+            // didn't get encoded properly.
             fatalError("Invalid un-keyed attributes")
         }
 
@@ -164,6 +189,7 @@ fileprivate class _DynamoArrayContainer: NSObject {
             fatalError("Casting to string array failed.")
         }
 
+        // Primitive types, so set them as string set or number set.
         switch type {
         case .number: return DynamoDB.AttributeValue(ns: strings)
         case .string: return DynamoDB.AttributeValue(ss: strings)
@@ -521,7 +547,8 @@ fileprivate struct _DynamoUnkeyedContainer: UnkeyedEncodingContainer {
         } else {
             // a list of encodable types
             encodingType = .list
-            try container.array.add(self.encoder.box(value))
+            let boxed = try self.encoder.box(value)
+            container.array.add(boxed)
 
         }
 
@@ -682,7 +709,14 @@ extension _DynamoEncoder {
         .init(n: "\(value)")
     }
 
-    func box(_ value: [String: Encodable]) throws -> NSObject? {
+    func box(_ value: [String: Encodable]) throws -> DynamoDB.AttributeValue {
+        guard let dict = try box_(value) as? [String: DynamoDB.AttributeValue] else {
+            throw EncodingError.dictionaryFailure
+        }
+        return .init(m: dict)
+    }
+
+    func box_(_ value: [String: Encodable]) throws -> NSObject? {
         let depth = storage.count
         let result = storage.pushKeyedContainer()
 
@@ -719,9 +753,11 @@ extension _DynamoEncoder {
     // if it was successful, if it fails we return nil.
     func box_(_ value: Encodable) throws -> NSObject? {
 
+//        print("box_: \(value)")
+
         // check if it's an encodable dictionary.
         if let dictionary = value as? _DynamoDictionaryEncodable {
-            return try box(dictionary as! [String: Encodable])
+            return try box_(dictionary as! [String: Encodable])
         }
 
         // check if it's an empty array, they make `aws` blow up
@@ -731,6 +767,10 @@ extension _DynamoEncoder {
             if array.count == 0 {
                 return nil
             }
+
+//            let boxedArray = try array.map { try self.box($0 as! Encodable) }
+//            return boxedArray as NSObject
+
         }
 
         // get our current depth to ensure a container gets pushed onto the stack.
@@ -788,6 +828,7 @@ enum _DynamoCodingKey: CodingKey {
 // MARK: - Encoding Error
 enum EncodingError: Error {
     case invalidTopContainer
+    case dictionaryFailure
 }
 
 private protocol DynamoNumber { }
