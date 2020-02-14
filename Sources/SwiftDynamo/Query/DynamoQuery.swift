@@ -8,6 +8,7 @@
 import Foundation
 import DynamoDB
 import NIO
+import DynamoCoder
 
 public struct DynamoQuery {
 
@@ -314,7 +315,7 @@ protocol AnyBindable {
 
 extension Encodable {
     func convertToAttribute() throws -> DynamoDB.AttributeValue {
-        try DynamoConverter().convertToAttribute(self)
+        try DynamoEncoder().convert(self)
     }
 }
 
@@ -323,7 +324,7 @@ extension Optional: AnyBindable where Wrapped: Encodable {
         guard let strongSelf = self else {
             return .init(null: true)
         }
-        return try DynamoConverter().convertToAttribute(strongSelf)
+        return try DynamoEncoder().convert(strongSelf)
     }
 }
 

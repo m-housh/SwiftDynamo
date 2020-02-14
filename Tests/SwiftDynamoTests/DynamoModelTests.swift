@@ -1,5 +1,6 @@
 import XCTest
 import DynamoDB
+import DynamoCoder
 @testable import SwiftDynamo
 
 final class DynamoModelTests: XCTestCase {
@@ -21,7 +22,7 @@ final class DynamoModelTests: XCTestCase {
         let decoded = try DynamoDecoder().decode(TestModel.self, from: encoded)
         XCTAssertEqual(model, decoded)
 
-        let asDynamoAttributes = try DynamoDecoder().decode([String: DynamoDB.AttributeValue].self, from: encoded)
+        let asDynamoAttributes = encoded
         XCTAssertEqual(asDynamoAttributes["id"]?.s, model.id!.uuidString)
         XCTAssertEqual(asDynamoAttributes["title"]?.s, model.title)
         XCTAssertEqual(asDynamoAttributes["order"]?.n!, "\(model.order!)")
@@ -85,12 +86,19 @@ final class DynamoModelTests: XCTestCase {
         model.id = .init()
         model.name = .init(first: "foo", last: "bar")
 
-        let converted = try DynamoConverter().convert(model)
-        print("Converted: \(converted)")
-        let data = try DynamoEncoder().encode(model)
-        let decoded = try DynamoDecoder().decode(ModelWithNestedCodable.self, from: data)
-        XCTAssertEqual(decoded.name.first, "foo")
-        XCTAssertEqual(decoded.name.last, "bar")
+//        let converted = try DynamoEnocder().convert(model)
+//        print("Converted: \(converted)")
+        do {
+            let data = try DynamoEncoder().encode(model)
+            print("DATA: \(data)")
+            let decoded = try DynamoDecoder().decode(ModelWithNestedCodable.self, from: data)
+            XCTAssertEqual(decoded.name.first, "foo")
+            XCTAssertEqual(decoded.name.last, "bar")
+        }
+        catch {
+            print("Error: \(error)")
+            throw error
+        }
     }
 
     static var allTests = [

@@ -36,7 +36,7 @@ extension AnyModel {
     
     public init(from decoder: Decoder) throws {
         self.init()
-        let container = try decoder.container(keyedBy: _DynamoCodingKey.self)
+        let container = try decoder.container(keyedBy: ModelCodingKey.self)
         try self.properties.forEach { (label, property) in
             let decoder = _ModelDecoder(container: container, key: .string(label))
             try property.decode(from: decoder)
@@ -44,7 +44,7 @@ extension AnyModel {
     }
 
     public func encode(to encoder: Encoder) throws {
-        let container = encoder.container(keyedBy: _DynamoCodingKey.self)
+        let container = encoder.container(keyedBy: ModelCodingKey.self)
         try self.properties.forEach { (label, property) in
             let encoder = _ModelEncoder(container: container, key: .string(label))
             try property.encode(to: encoder)
@@ -56,8 +56,8 @@ extension AnyModel {
 // Custome model specific encoder.
 private struct _ModelEncoder: Encoder, SingleValueEncodingContainer {
 
-    var container: KeyedEncodingContainer<_DynamoCodingKey>
-    let key: _DynamoCodingKey
+    var container: KeyedEncodingContainer<ModelCodingKey>
+    let key: ModelCodingKey
 
     var codingPath: [CodingKey] { container.codingPath }
 
@@ -89,8 +89,8 @@ private struct _ModelEncoder: Encoder, SingleValueEncodingContainer {
 // Custome model specifiic decoder.
 private struct _ModelDecoder: Decoder, SingleValueDecodingContainer {
 
-    let container: KeyedDecodingContainer<_DynamoCodingKey>
-    let key: _DynamoCodingKey
+    let container: KeyedDecodingContainer<ModelCodingKey>
+    let key: ModelCodingKey
     var codingPath: [CodingKey] { container.codingPath }
     var userInfo: [CodingUserInfoKey : Any] = [:]
 
@@ -172,4 +172,40 @@ extension DynamoModel {
         self.anyID as! ID<IDValue>
     }
 
+}
+
+enum ModelCodingKey: CodingKey {
+
+    case string(String)
+    case int(Int)
+
+    var stringValue: String {
+        switch self {
+        case let .string(string): return string
+        case let .int(int): return int.description
+        }
+    }
+
+    init(int: Int) {
+        self = .int(int)
+    }
+
+    init(string: String) {
+        self = .string(string)
+    }
+
+    init?(stringValue: String) {
+        self = .string(stringValue)
+    }
+
+    var intValue: Int? {
+        switch self {
+        case let .int(int): return int
+        case .string: return nil
+        }
+    }
+
+    init?(intValue: Int) {
+        self = .int(intValue)
+    }
 }

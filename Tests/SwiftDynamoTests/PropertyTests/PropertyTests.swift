@@ -24,12 +24,12 @@ final class PropertyTests: XCTestCase {
         XCTAssertEqual(try! field.attributeValue()!.s, "foo")
     }
 
-    func testDecodeOptionalType() {
-        let field = Field<Int?>(key: "int")
-        let optional: Int? = nil
-        let decoder = _DynamoDecoder(referencing: optional as Any)
-        try! field.decode(from: decoder)
-    }
+//    func testDecodeOptionalType() {
+//        let field = Field<Int?>(key: "int")
+//        let optional: Int? = nil
+//        let decoder = _DynamoDecoder(referencing: optional as Any)
+//        try! field.decode(from: decoder)
+//    }
 
     func testIDGeneratorDoesNothingForUserType() {
         let id = ID<String>(key: "foo", generatedBy: .user)
@@ -43,22 +43,22 @@ final class PropertyTests: XCTestCase {
         XCTAssertNotNil(generated.inputValue)
     }
 
-    func testSortKeyCodable() {
-        let sortKey = SortKey<String>(key: "Foo")
-        sortKey.wrappedValue = "bar"
-        let encoder = _DynamoEncoder()
-        try! sortKey.encode(to: encoder)
-
-        let decoder = _DynamoDecoder(referencing: "notBar")
-        try! sortKey.decode(from: decoder)
-        XCTAssertEqual(sortKey.wrappedValue, "notBar")
-
-        let output = DatabaseOutput.init(database: .testing, output: .dictionary(["Foo": .init(s: "boom")]))
-        try! sortKey.output(from: output)
-        XCTAssertEqual(sortKey.wrappedValue, "boom")
-
-        XCTAssertEqual(sortKey.key, "Foo")
-    }
+//    func testSortKeyCodable() {
+//        let sortKey = SortKey<String>(key: "Foo")
+//        sortKey.wrappedValue = "bar"
+//        let encoder = _DynamoEncoder()
+//        try! sortKey.encode(to: encoder)
+//
+//        let decoder = _DynamoDecoder(referencing: "notBar")
+//        try! sortKey.decode(from: decoder)
+//        XCTAssertEqual(sortKey.wrappedValue, "notBar")
+//
+//        let output = DatabaseOutput.init(database: .testing, output: .dictionary(["Foo": .init(s: "boom")]))
+//        try! sortKey.output(from: output)
+//        XCTAssertEqual(sortKey.wrappedValue, "boom")
+//
+//        XCTAssertEqual(sortKey.key, "Foo")
+//    }
 
     func testAnyFieldPassesToWrappedField() {
         let model = TestModel()
@@ -73,13 +73,13 @@ final class PropertyTests: XCTestCase {
         XCTAssertEqual(id.uuidString, attributeValue!.s!)
     }
 
-    func testAnyPropertyPassesToWrappedField() throws {
-        let model = TestModel()
-        model.id = .init()
-        let anyProperty = model.$id as AnyProperty
-        try anyProperty.encode(to: _DynamoEncoder())
-        try anyProperty.decode(from: _DynamoDecoder(referencing: "\(model.id!)"))
-    }
+//    func testAnyPropertyPassesToWrappedField() throws {
+//        let model = TestModel()
+//        model.id = .init()
+//        let anyProperty = model.$id as AnyProperty
+//        try anyProperty.encode(to: _DynamoEncoder())
+//        try anyProperty.decode(from: _DynamoDecoder(referencing: "\(model.id!)"))
+//    }
 
     func testDefaultGeneratorForIDIsSetToUser() {
         let id = ID<Int>(key: "Foo")

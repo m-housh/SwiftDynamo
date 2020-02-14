@@ -7,6 +7,7 @@
 
 import Foundation
 import DynamoDB
+import DynamoCoder
 
 /// Holds database output from a query.
 public struct DatabaseOutput {

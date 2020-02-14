@@ -13,6 +13,9 @@ create_partition_only_table:
 		--endpoint-url $(ENDPOINT) \
 		--cli-input-json file://dynamo/create_table_partition_key_only.json
 
+start_dynamo:
+	@docker run --name dynamo -d -p 8000:8000 amazon/dynamodb-local
+
 create_todo:
 	@aws dynamodb put-item \
 		--endpoint-url $(ENDPOINT) \

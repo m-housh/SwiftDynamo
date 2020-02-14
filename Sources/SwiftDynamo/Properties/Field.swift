@@ -7,6 +7,7 @@
 
 import Foundation
 import DynamoDB
+import DynamoCoder
 
 /// A database field.
 @propertyWrapper
@@ -104,7 +105,7 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
         guard inputValue != nil else {
             return nil
         }
-        return try DynamoConverter().convertToAttribute(wrappedValue)
+        return try DynamoEncoder().convert(wrappedValue)
     }
 }
 
