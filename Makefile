@@ -16,6 +16,10 @@ create_partition_only_table:
 start_dynamo:
 	@docker run --name dynamo -d -p 8000:8000 amazon/dynamodb-local
 
+kill_dynamo:
+	@docker stop dynamo
+	@docker rm -f dynamo
+
 create_todo:
 	@aws dynamodb put-item \
 		--endpoint-url $(ENDPOINT) \

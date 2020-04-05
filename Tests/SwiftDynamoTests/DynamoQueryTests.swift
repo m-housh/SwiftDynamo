@@ -30,7 +30,7 @@ final class DynamoQueryTests: XCTestCase {
         var options = DynamoQuery.OptionsContainer()
         options.addFilterExpression("foo", .equal, "bar")
         options.addFilterExpression("baz", .equal, "boom")
-        XCTAssertEqual(options.filterExpression!, "foo = bar and baz = boom")
+        XCTAssertEqual(options.filterExpression!, "foo = bar AND baz = boom")
     }
 
     func testOptionsFromQuery() {

@@ -51,14 +51,14 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     //          sure how to play that, perhaps the 
 
     @discardableResult
-    public func setSortKey(sortKey key: String, to value: Encodable) -> Self {
-        query.sortKey = (key, .bind(value))
+    public func setSortKey(sortKey key: String, to value: Encodable, method: DynamoQuery.Filter.Method = .equal) -> Self {
+        query.sortKey = (key, .bind(value), method)
         return self
     }
 
     @discardableResult
-    public func setSortKey<Value>(_ sortKey: KeyPath<Model, SortKey<Value>>, to value: Value) -> Self {
-        query.sortKey = (Model.key(for: sortKey), .bind(value))
+    public func setSortKey<Value>(_ sortKey: KeyPath<Model, SortKey<Value>>, to value: Value, method: DynamoQuery.Filter.Method = .equal) -> Self {
+        query.sortKey = (Model.key(for: sortKey), .bind(value), method)
         return self
     }
 
@@ -272,6 +272,10 @@ public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
 extension DynamoQuery.Filter.FieldFilterKey {
 
     init(field: AnyField) {
+//        print("key: \(field.key)")
+//        print("partitionKey: \(field.partitionKey)")
+//        print("sortKey: \(field.sortKey)")
+//        print(field)
         self.key = field.key
         self.isPartitionKey = field.partitionKey
         self.isSortKey = field.sortKey

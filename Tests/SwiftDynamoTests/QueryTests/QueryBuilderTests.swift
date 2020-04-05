@@ -116,4 +116,30 @@ final class QueryBuilderTests: XCTestCase {
 
     }
 
+    func testBeginsWith() {
+        final class ModelWithSortKey: DynamoModel {
+
+            static var schema: DynamoSchema = "ModelWithSortKey"
+
+            @ID(key: "ID")
+            var id: Int?
+
+            @SortKey(key: "Foo")
+            var foo: String
+
+            init() { }
+
+        }
+
+        let builder = ModelWithSortKey
+            .query(on: .testing)
+
+        builder
+            .setPartitionKey(partitionKey: "ID", to: 1)
+            .filter(\.$foo, .begins_with, "bar")
+
+        XCTAssertEqual(builder.query.optionsContainer.keyConditionExpression!,
+                       "#ID = :partitionID AND begins_with(#Foo, :Foo)")
+
+    }
 }

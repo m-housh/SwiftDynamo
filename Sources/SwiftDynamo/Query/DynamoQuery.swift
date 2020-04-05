@@ -29,11 +29,11 @@ public struct DynamoQuery {
     /// This can be set from several different places, globally on the schema, declared as a
     /// property on the model, or set directly on the query builder.  That means that whatever
     /// gets set last is what gets set on the request.
-    public var sortKey: (String, Value)? {
+    public var sortKey: (String, Value, Filter.Method)? {
         get { optionsContainer.sortKey }
         set {
             if let value = newValue {
-                options.append(.sortKey(value.0, value.1))
+                options.append(.sortKey(value.0, value.1, value.2))
             }
         }
     }
@@ -85,7 +85,7 @@ public struct DynamoQuery {
         }
         // check for a sort key on the schema.
         if let sortKey = schema.sortKey, let value = sortKey.value {
-            self.sortKey = (sortKey.key, .bind(value.description))
+            self.sortKey = (sortKey.key, .bind(value.description), .equal)
         }
     }
 }
@@ -132,7 +132,7 @@ extension DynamoQuery {
     public enum Option {
 
         // These are the most common options we work with.
-        case sortKey(String, Value)
+        case sortKey(String, Value, Filter.Method)
         case partitionKey(String, Value)
         case limit(Int)
 
@@ -187,18 +187,22 @@ extension DynamoQuery {
             // Whatever get's set last will win, the precedence will typically follow.
             // global get's set first, a field value or setting on a query will override the global, or
             // whatever was set before it, depending on the order.
-            case let .sortKey(key, value):
-                options.sortKey = (key, value)
+            case let .sortKey(key, value, method):
+                options.sortKey = (key, value, method)
                 let attribute = try! value.attributeValue()
                 let expression = ":sortKey"
-                options.setExpressionAttribute(expression, attribute)
-                options.addKeyConditionExpression(key, .equal, expression)
+                let expressionName = "#\(key)"
+                options.setExpressionAttributeName(expressionName, key)
+                options.setExpressionAttributeValue(expression, attribute)
+                options.addKeyConditionExpression(expressionName, method, expression)
             case let .partitionKey(key, value):
                 options.partitionKey = (key, value)
                 let attribute = try! value.attributeValue()
                 let expression = ":partitionID"
-                options.setExpressionAttribute(expression, attribute)
-                options.addKeyConditionExpression(key, .equal, expression)
+                let expressionName = "#\(key)"
+                options.setExpressionAttributeName(expressionName, key)
+                options.setExpressionAttributeValue(expression, attribute)
+                options.addKeyConditionExpression(expressionName, .equal, expression)
             }
         }
 
@@ -228,7 +232,7 @@ extension DynamoQuery {
         var conditionalOperator: DynamoDB.ConditionalOperator? = nil
         var conditionExpression: String? = nil
         var returnItemCollectionMetrics: DynamoDB.ReturnItemCollectionMetrics? = nil
-        var sortKey: (String, Value)? = nil
+        var sortKey: (String, Value, Filter.Method)? = nil
         var partitionKey: (String, Value)? = nil
     }
 
@@ -257,13 +261,34 @@ extension DynamoQuery {
             // LHS is equal to RHS
             case equality(inverse: Bool)
 
+            case begins_with
+
             /// Converts the method to the `aws` string representation for
             /// building the filter expression.
             public var description: String {
                 switch self {
                 case let .equality(direction):
                     return direction != true ? "=" : "<>"
+                case .begins_with:
+                    return "begins_with"
                 }
+            }
+
+            func updateExpression(_ input: String?, key: String, value: String) -> String {
+                var output = input ?? ""
+                if !output.isEmpty {
+                    output += " AND "
+                }
+
+                switch self {
+                case .equality:
+                    output += "\(key) \(description) \(value)"
+                case .begins_with:
+                    // begins_with(key, value)
+                    output += "\(description)(\(key), \(value))"
+                }
+
+                return output
             }
         }
 
@@ -330,11 +355,19 @@ extension Optional: AnyBindable where Wrapped: Encodable {
 
 extension DynamoQuery.OptionsContainer {
 
-    mutating func setExpressionAttribute(_ expression: String, _ value: DynamoDB.AttributeValue) {
+    mutating func setExpressionAttributeValue(_ expression: String, _ value: DynamoDB.AttributeValue) {
         if expressionAttributeValues == nil {
             self.expressionAttributeValues = [expression: value]
         } else {
             self.expressionAttributeValues![expression] = value
+        }
+    }
+
+    mutating func setExpressionAttributeName(_ name: String, _ value: String) {
+        if expressionAttributeNames == nil {
+            self.expressionAttributeNames = [name: value]
+        } else {
+            self.expressionAttributeNames![name] = value
         }
     }
 
@@ -348,19 +381,27 @@ extension DynamoQuery.OptionsContainer {
             fatalError("Can not use not equal expression on sort key or partition key")
         }
 
-        if keyConditionExpression == nil {
-            keyConditionExpression = "\(key) \(method) \(expression)"
-        } else {
-            keyConditionExpression! += " and \(key) \(method) \(expression)"
-        }
+        let newValue = method.updateExpression(keyConditionExpression, key: key, value: expression)
+        keyConditionExpression = newValue
+
+
+//        if keyConditionExpression == nil {
+//            keyConditionExpression = "\(key) \(method) \(expression)"
+//        } else {
+//            keyConditionExpression! += " and \(key) \(method) \(expression)"
+//        }
     }
 
     mutating func addFilterExpression(_ key: String, _ method: DynamoQuery.Filter.Method, _ expression: String) {
-        if filterExpression == nil {
-            filterExpression = "\(key) \(method) \(expression)"
-        } else {
-            filterExpression! += " and \(key) \(method) \(expression)"
-        }
+
+        let newValue = method.updateExpression(filterExpression, key: key, value: expression)
+        filterExpression = newValue
+
+//        if filterExpression == nil {
+//            filterExpression = "\(key) \(method) \(expression)"
+//        } else {
+//            filterExpression! += " and \(key) \(method) \(expression)"
+//        }
     }
 
     init(query: DynamoQuery) {
@@ -373,13 +414,15 @@ extension DynamoQuery.OptionsContainer {
             for filter in query.filters {
                 switch filter {
                 case let .field(fieldKey, method, value):
+                    let key = "#\(fieldKey.key)"
                     let expression = ":\(fieldKey.key)"
-                    options.setExpressionAttribute(expression, try! value.attributeValue())
+                    options.setExpressionAttributeValue(expression, try! value.attributeValue())
+                    options.setExpressionAttributeName(key, fieldKey.key)
                     if (fieldKey.isPartitionKey || fieldKey.isSortKey) {
-                        options.addKeyConditionExpression(fieldKey.key, method, expression)
+                        options.addKeyConditionExpression(key, method, expression)
                     }
                     else {
-                        options.addFilterExpression(fieldKey.key, method, expression)
+                        options.addFilterExpression(key, method, expression)
                     }
                 }
             }

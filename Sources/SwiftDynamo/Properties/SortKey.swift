@@ -34,7 +34,7 @@ public final class SortKey<Value>: AnyField, FieldRepresentible, AnySortKey wher
     /// - parameters:
     ///     - key: The database key for the sort key.
     public init(key: String) {
-        self.field = .init(key: key)
+        self.field = .init(key: key, partitionKey: false, sortKey: true)
     }
 
     // We delegate responsibilities to the field.
