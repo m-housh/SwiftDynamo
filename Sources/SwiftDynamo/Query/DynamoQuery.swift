@@ -98,6 +98,8 @@ extension DynamoQuery {
         case read
         case update
         case delete
+//        case batchDelete
+        case batchCreate
 
         // force aws specific query type
         case scan
@@ -119,6 +121,9 @@ extension DynamoQuery {
         /// The keys should map to the database key and the values will get converted
         /// to a dynamo attribute type and saved to the database.
         case dictionary([String: Value])
+
+//        case list([AnyModel.Type: [AnyModel]])
+//        case list([Value])
     }
 
     // MARK: - Options
@@ -415,7 +420,7 @@ extension DynamoQuery.OptionsContainer {
                 switch filter {
                 case let .field(fieldKey, method, value):
                     let key = "#\(fieldKey.key)".replacingOccurrences(of: " ", with: "")
-                    let expression = ":\(fieldKey.key)"
+                    let expression = ":\(fieldKey.key)".replacingOccurrences(of: " ", with: "")
                     options.setExpressionAttributeValue(expression, try! value.attributeValue())
                     options.setExpressionAttributeName(key, fieldKey.key)
                     if (fieldKey.isPartitionKey || fieldKey.isSortKey) {

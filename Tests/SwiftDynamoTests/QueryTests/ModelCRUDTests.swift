@@ -525,6 +525,18 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         print(relation.query.optionsContainer)
     }
 
+    func testBatchCreate() throws {
+        try runTest {
+            let saved = try TestModel.batchCreate(seeds, on: database).wait()
+            XCTAssertEqual(saved.count, seeds.count)
+
+            try fetchAll { models in
+                XCTAssertEqual(models.count, saved.count)
+            }
+            .deleteAll()
+        }
+    }
+
     // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),

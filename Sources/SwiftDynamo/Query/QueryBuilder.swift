@@ -80,6 +80,13 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
+    public func set(_ data: [[String: DynamoQuery.Value]]) -> Self {
+//        query.input.append(.dictionary(data))
+        query.input = data.reduce(into: query.input) { $0.append(.dictionary($1)) }
+        return self
+    }
+
+    @discardableResult
     public func set<Value>(
         _ key: KeyPath<Model, Field<Value>>,
         to value: Value

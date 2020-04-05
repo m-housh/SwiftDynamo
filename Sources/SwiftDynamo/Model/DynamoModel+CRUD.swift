@@ -65,4 +65,12 @@ extension DynamoModel {
             .action(.delete)
             .run()
     }
+
+    public static func batchCreate(_ items: [Self], on database: DynamoDB) -> EventLoopFuture<[Self]> {
+        Self.query(on: database)
+            .set(items.map { $0.input })
+            .action(.batchCreate)
+            .run()
+            .map { items }
+    }
 }

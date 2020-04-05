@@ -7,7 +7,7 @@
 
 import Foundation
 import DynamoDB
-
+import DynamoCoder
 
 extension DynamoDB.QueryInput {
 
@@ -105,6 +105,11 @@ extension DynamoDB.BatchWriteItemInput {
     static func deleteRequest(from query: DynamoQuery) -> DynamoDB.BatchWriteItemInput {
         .init(requestItems: [query.schema.tableName: [DynamoDB.WriteRequest.deleteRequest(from: query)]])
     }
+
+    static func createRequest(from query: DynamoQuery) throws -> DynamoDB.BatchWriteItemInput {
+        precondition(query.input.count > 0, "Invalid input count for update item.")
+        return try .init(requestItems: [query.schema.tableName: DynamoDB.WriteRequest.createRequest(from: query)])
+    }
 }
 
 extension DynamoDB.WriteRequest {
@@ -112,6 +117,27 @@ extension DynamoDB.WriteRequest {
     static func deleteRequest(from query: DynamoQuery) -> DynamoDB.WriteRequest {
         precondition(query.action == .delete)
         return .init(deleteRequest: .from(query))
+    }
+
+    static func createRequest(from query: DynamoQuery) throws -> [DynamoDB.WriteRequest] {
+        precondition(query.action == .batchCreate)
+        return try query.input.reduce(into: [DynamoDB.WriteRequest]()) { currentRequests, item in
+            var dict = try item
+                .assertDictionary()
+                .convertToAttributes()
+
+            // add a sort and partition key, if needed.
+            if let partitionKey = query.partitionKey, dict[partitionKey.0] == nil {
+                dict[partitionKey.0] = try partitionKey.1.attributeValue()
+            }
+
+            if let sortKey = query.sortKey, dict[sortKey.0] == nil {
+                dict[sortKey.0] = try sortKey.1.attributeValue()
+            }
+
+            currentRequests.append(.init(deleteRequest: nil, putRequest: .init(item: dict)))
+
+        }
     }
 }
 
@@ -134,6 +160,17 @@ extension DynamoQuery.Value {
         }
     }
 
+//    func assertList() throws -> [[String: DynamoQuery.Value]] {
+//        switch self {
+//        case let .list(items):
+//            return try items.reduce(into: [[String: DynamoQuery.Value]]()) { currentList, item in
+//                currentList.append(try item.assertDictionary())
+//            }
+//        default:
+//            fatalError("Expected a list: \(self)")
+//        }
+//    }
+
     func attributeValue() throws -> DynamoDB.AttributeValue {
         switch self {
         case let .bind(encodable):
@@ -143,6 +180,9 @@ extension DynamoQuery.Value {
             return try encodable.convertToAttribute()
         case let .dictionary(dictionary):
             return .init(m: try dictionary.convertToAttributes())
+//        default:
+//            fatalError("Unexpected value: \(self)")
+
         }
     }
 }
