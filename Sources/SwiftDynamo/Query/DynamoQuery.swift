@@ -191,7 +191,7 @@ extension DynamoQuery {
                 options.sortKey = (key, value, method)
                 let attribute = try! value.attributeValue()
                 let expression = ":sortKey"
-                let expressionName = "#\(key)"
+                let expressionName = "#\(key)".replacingOccurrences(of: " ", with: "")
                 options.setExpressionAttributeName(expressionName, key)
                 options.setExpressionAttributeValue(expression, attribute)
                 options.addKeyConditionExpression(expressionName, method, expression)
@@ -199,7 +199,7 @@ extension DynamoQuery {
                 options.partitionKey = (key, value)
                 let attribute = try! value.attributeValue()
                 let expression = ":partitionID"
-                let expressionName = "#\(key)"
+                let expressionName = "#\(key)".replacingOccurrences(of: " ", with: "")
                 options.setExpressionAttributeName(expressionName, key)
                 options.setExpressionAttributeValue(expression, attribute)
                 options.addKeyConditionExpression(expressionName, .equal, expression)
@@ -414,7 +414,7 @@ extension DynamoQuery.OptionsContainer {
             for filter in query.filters {
                 switch filter {
                 case let .field(fieldKey, method, value):
-                    let key = "#\(fieldKey.key)"
+                    let key = "#\(fieldKey.key)".replacingOccurrences(of: " ", with: "")
                     let expression = ":\(fieldKey.key)"
                     options.setExpressionAttributeValue(expression, try! value.attributeValue())
                     options.setExpressionAttributeName(key, fieldKey.key)
