@@ -48,6 +48,7 @@ extension AnyModel {
     }
 
     public func encode(to encoder: Encoder) throws {
+        self.generateCompositeKeys()
         let container = encoder.container(keyedBy: ModelCodingKey.self)
         try self.properties.forEach { (label, property) in
             let encoder = _ModelEncoder(container: container, key: .string(label))
