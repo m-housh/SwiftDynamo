@@ -25,6 +25,7 @@ extension DynamoDB {
         case .create: return _create(query, onResult: callback)
         case .update: return _update(query, onResult: callback)
         case .delete: return _delete(query)
+        case .batchDelete: return _batchDelete(query)
         case .batchCreate: return _batchCreate(query, onResult: callback)
 //        default:
 //            fatalError()
@@ -117,5 +118,10 @@ extension DynamoDB {
             .map { output in
                 callback(.init(database: self, output: .dictionary([:])))
             }
+    }
+
+    private func _batchDelete(_ query: DynamoQuery) -> EventLoopFuture<Void> {
+        return self.batchWriteItem(.batchDeleteRequest(from: query))
+            .map { _ in }
     }
 }

@@ -27,6 +27,8 @@ public protocol AnyField: AnyProperty {
     /// The database key for the field.
     var key: String { get }
 
+//    var outputValue: DynamoQuery.Value? { get set }
+
     /// Input from the user.  This get's set when a value has been set for the first time or
     /// updated based on user input.
     var inputValue: DynamoQuery.Value? { get set }

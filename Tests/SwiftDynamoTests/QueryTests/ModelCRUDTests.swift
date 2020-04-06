@@ -537,6 +537,20 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         }
     }
 
+    func testBatchDelete() throws {
+        try runTest(seed: true) {
+
+            try fetchAll { before in
+                XCTAssert(before.count > 0)
+                try TestModel.batchDelete(self.seeds, on: self.database).wait()
+            }
+            .fetchAll {
+                XCTAssertEqual($0.count, 0)
+            }
+            .deleteAll()
+        }
+    }
+
     // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),

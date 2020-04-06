@@ -98,7 +98,7 @@ extension DynamoQuery {
         case read
         case update
         case delete
-//        case batchDelete
+        case batchDelete
         case batchCreate
 
         // force aws specific query type
@@ -121,6 +121,9 @@ extension DynamoQuery {
         /// The keys should map to the database key and the values will get converted
         /// to a dynamo attribute type and saved to the database.
         case dictionary([String: Value])
+
+        /// Used in batch delete requests.
+        case key(AnyDatabaseKey)
 
 //        case list([AnyModel.Type: [AnyModel]])
 //        case list([Value])

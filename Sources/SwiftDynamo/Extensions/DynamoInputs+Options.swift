@@ -102,6 +102,33 @@ extension DynamoDB.UpdateItemInput {
 // MARK: - Delete
 extension DynamoDB.BatchWriteItemInput {
 
+    static func batchDeleteRequest(from query: DynamoQuery) -> DynamoDB.BatchWriteItemInput {
+        precondition(query.input.count > 0, "Invalid input count for batch delete.")
+
+        let items = query.input.reduce(into: [DynamoDB.WriteRequest]()) { array, item in
+            switch item {
+            case let .key(key):
+                precondition(key.key.count > 0, "Invalid database key.")
+                var databaseKey = key.key
+
+                // add default sort and partition keys.
+                if let partitionKey = query.partitionKey, databaseKey[partitionKey.0] == nil {
+                    databaseKey[partitionKey.0] = try! partitionKey.1.attributeValue()
+                }
+
+                if let sortKey = query.sortKey, databaseKey[sortKey.0] == nil {
+                    databaseKey[sortKey.0] = try! sortKey.1.attributeValue()
+                }
+                
+                array.append(.init(deleteRequest: .init(key: databaseKey), putRequest: nil))
+            default:
+                fatalError("Invalid item in the batch delete input: \(item)")
+            }
+        }
+
+        return .init(requestItems: [query.schema.tableName: items])
+    }
+
     static func deleteRequest(from query: DynamoQuery) -> DynamoDB.BatchWriteItemInput {
         .init(requestItems: [query.schema.tableName: [DynamoDB.WriteRequest.deleteRequest(from: query)]])
     }
@@ -180,8 +207,8 @@ extension DynamoQuery.Value {
             return try encodable.convertToAttribute()
         case let .dictionary(dictionary):
             return .init(m: try dictionary.convertToAttributes())
-//        default:
-//            fatalError("Unexpected value: \(self)")
+        default:
+            fatalError("Unexpected value: \(self)")
 
         }
     }

@@ -20,6 +20,10 @@ public protocol AnyModel: class, Codable {
     init()
 }
 
+// MARK: - TODO:
+//          Fix ID so it doesn't need to be optional, may need to get rid
+//          of ID all together and find a way to create / mark composite keys.
+
 /// A model that is specifically for `DynamoDB`.
 public protocol DynamoModel: AnyModel {
 
@@ -138,6 +142,18 @@ extension AnyModel {
         try self.properties.forEach { (_, property) in
             try property.output(from: output)
         }
+    }
+
+    var databaseKey: [String: DynamoDB.AttributeValue] {
+        var key = [String: DynamoDB.AttributeValue]()
+        for (_, field) in self.fields {
+            if field.partitionKey || field.sortKey {
+                if let value = try? field.attributeValue() {
+                    key[field.key] = value
+                }
+            }
+        }
+        return key
     }
 }
 

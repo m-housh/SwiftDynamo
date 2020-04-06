@@ -79,10 +79,17 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         return self
     }
 
+    /// Used for batch create.
     @discardableResult
     public func set(_ data: [[String: DynamoQuery.Value]]) -> Self {
-//        query.input.append(.dictionary(data))
         query.input = data.reduce(into: query.input) { $0.append(.dictionary($1)) }
+        return self
+    }
+
+    /// Used for batch delete.
+    @discardableResult
+    public func set(_ keys: [AnyDatabaseKey]) -> Self {
+        query.input = keys.reduce(into: query.input) { $0.append(.key($1)) }
         return self
     }
 
