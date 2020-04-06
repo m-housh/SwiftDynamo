@@ -39,6 +39,7 @@ extension DynamoModel {
 
     private func _create(on database: DynamoDB) -> EventLoopFuture<Void> {
         self._$id.generate()
+        self.generateCompositeKeys()
         return Self.query(on: database)
             .set(self.input)
             .action(.create)

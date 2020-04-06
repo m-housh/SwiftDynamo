@@ -124,4 +124,20 @@ extension AnyModel {
             }
 
     }
+
+    /// Returns a composite key, if it exists on the model.
+    var compositeKeys: [(String, CompositeSortKey<Self>)] {
+        properties.compactMap { (label, property) in
+            guard let composite = property as? CompositeSortKey<Self> else {
+                return nil
+            }
+            return (label, composite)
+        }
+    }
+
+    func generateCompositeKeys() {
+        for (_, compositeKey) in compositeKeys {
+            compositeKey.generate(self)
+        }
+    }
 }

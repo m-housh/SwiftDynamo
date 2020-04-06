@@ -551,6 +551,43 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         }
     }
 
+    func testCompositeSortKey() throws {
+        final class ModelWithComposite: DynamoModel {
+            static var schema: DynamoSchema = "Todo"
+
+            @ID(key: "TodoID")
+            var id: UUID?
+
+            var key1: String = "one"
+            var key2: String = "two"
+
+            @CompositeSortKey(
+                ModelWithComposite.self,
+                key: "SortKey",
+                generate: { "\($0.key1).\($0.key2)" }
+            )
+            var sortKey: String
+
+            init() {
+                self.id = .init()
+            }
+        }
+
+        let model = ModelWithComposite()
+        model.id = .init()
+        let compositeKey = model.compositeKeys
+        XCTAssertEqual(compositeKey.count, 1)
+        compositeKey.first!.1.generate(model)
+        XCTAssertEqual(compositeKey.first!.1.generateSortKey(model), "one.two")
+        XCTAssert(ModelWithComposite().databaseKey.keys.contains("SortKey"))
+
+        let model2 = ModelWithComposite()
+        model2.sortKey = "foo.bar"
+        // check that values don't get overwritten.
+        model2.$sortKey.generate(model2)
+        XCTAssertEqual(model2.databaseKey["SortKey"]!.s, "foo.bar")
+    }
+
     // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),

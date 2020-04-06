@@ -150,6 +150,9 @@ extension DynamoModel {
     /// Generates the database key items for an instance.
     var databaseKey: [String: DynamoDB.AttributeValue] {
         var key = [String: DynamoDB.AttributeValue]()
+        // generate a composite key if applicable, before continuing
+        // else fatal errors are raised.
+        self.generateCompositeKeys()
 
         for (_, field) in self.fields {
             if field.partitionKey || field.sortKey {
