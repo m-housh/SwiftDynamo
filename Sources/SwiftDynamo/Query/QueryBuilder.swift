@@ -88,7 +88,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
     /// Used for batch delete.
     @discardableResult
-    public func set(_ keys: [AnyDatabaseKey]) -> Self {
+    public func set(_ keys: [AnyDynamoDatabaseKey]) -> Self {
         query.input = keys.reduce(into: query.input) { $0.append(.key($1)) }
         return self
     }

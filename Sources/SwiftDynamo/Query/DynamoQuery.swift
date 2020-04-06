@@ -123,7 +123,7 @@ extension DynamoQuery {
         case dictionary([String: Value])
 
         /// Used in batch delete requests.
-        case key(AnyDatabaseKey)
+        case key(AnyDynamoDatabaseKey)
 
 //        case list([AnyModel.Type: [AnyModel]])
 //        case list([Value])

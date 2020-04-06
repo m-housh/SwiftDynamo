@@ -8,11 +8,11 @@
 import Foundation
 import DynamoDB
 
-public protocol AnyDatabaseKey {
+public protocol AnyDynamoDatabaseKey {
     var key: [String: DynamoDB.AttributeValue] { get }
 }
 
-struct DatabaseKey: AnyDatabaseKey {
+struct DatabaseKey: AnyDynamoDatabaseKey {
 
     var key: [String : DynamoDB.AttributeValue]
 
