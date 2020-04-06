@@ -16,7 +16,4 @@ struct DatabaseKey: AnyDatabaseKey {
 
     var key: [String : DynamoDB.AttributeValue]
 
-    init(_ model: AnyModel) {
-        self.key = model.databaseKey
-    }
 }

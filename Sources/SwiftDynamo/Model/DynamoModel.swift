@@ -143,9 +143,14 @@ extension AnyModel {
             try property.output(from: output)
         }
     }
+}
 
+extension DynamoModel {
+
+    /// Generates the database key items for an instance.
     var databaseKey: [String: DynamoDB.AttributeValue] {
         var key = [String: DynamoDB.AttributeValue]()
+
         for (_, field) in self.fields {
             if field.partitionKey || field.sortKey {
                 if let value = try? field.attributeValue() {
@@ -153,6 +158,30 @@ extension AnyModel {
                 }
             }
         }
+
+        if let globalPartitionKey = Self.schema.partitionKey {
+            if let value = globalPartitionKey.value, key[globalPartitionKey.key] == nil {
+                    key[globalPartitionKey.key] = .init(s: "\(value)")
+            }
+        }
+
+        if let globalSortKey = Self.schema.sortKey {
+            if let value = globalSortKey.value, key[globalSortKey.key] == nil {
+                    key[globalSortKey.key] = .init(s: "\(value)")
+            }
+        }
+
+        if key[anyID.key] == nil {
+            if anyID.partitionKey || anyID.sortKey, let idValue = try? anyID.attributeValue() {
+                key[anyID.key] = idValue
+            }
+            else {
+                if let id = self.id, let idValue = try? id.convertToAttribute() {
+                    key[anyID.key] = idValue
+                }
+            }
+        }
+
         return key
     }
 }

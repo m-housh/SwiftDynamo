@@ -119,7 +119,7 @@ extension DynamoDB.BatchWriteItemInput {
                 if let sortKey = query.sortKey, databaseKey[sortKey.0] == nil {
                     databaseKey[sortKey.0] = try! sortKey.1.attributeValue()
                 }
-                
+
                 array.append(.init(deleteRequest: .init(key: databaseKey), putRequest: nil))
             default:
                 fatalError("Invalid item in the batch delete input: \(item)")

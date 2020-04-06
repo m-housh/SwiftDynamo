@@ -84,7 +84,8 @@ extension XCTDynamoTestCase where Self: XCTestCase {
 
     public func deleteAll() {
         try! fetchAll() { models in
-            _ = models.map { try! Model.delete(id: $0.id!, on: self.database).wait() }
+            _ = try models.map { try Model.delete(id: $0.id!, on: self.database).wait() }
+//            try! Model.batchDelete(models, on: self.database).wait()
         }
     }
 

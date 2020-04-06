@@ -109,6 +109,9 @@ extension DynamoDB {
             }
     }
 
+    // MARK: - TODO:
+            // the batch items need to be limited to 25 items, so either need to loop over them
+            // or add a precondition.
     private func _batchCreate(
         _ query: DynamoQuery,
         onResult callback: @escaping (DatabaseOutput) -> ()

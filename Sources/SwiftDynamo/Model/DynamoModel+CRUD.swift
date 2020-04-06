@@ -76,7 +76,7 @@ extension DynamoModel {
 
     public static func batchDelete(_ items: [Self], on database: DynamoDB) -> EventLoopFuture<Void> {
         Self.query(on: database)
-            .set(items.map { DatabaseKey($0) })
+            .set(items.map { DatabaseKey(key: $0.databaseKey) })
             .action(.batchDelete)
             .run()
     }
