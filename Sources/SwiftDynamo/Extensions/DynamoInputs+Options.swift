@@ -175,6 +175,33 @@ extension DynamoDB.DeleteRequest {
     }
 }
 
+extension DynamoDB.ScanInput {
+
+    static func from(_ query: DynamoQuery) -> DynamoDB.ScanInput {
+
+        let options = query.optionsContainer
+
+        return DynamoDB.ScanInput(
+            attributesToGet: nil,
+            conditionalOperator: options.conditionalOperator,
+            consistentRead: options.consistentRead,
+            exclusiveStartKey: options.exclusiveStartKey,
+            expressionAttributeNames: options.expressionAttributeNames,
+            expressionAttributeValues: options.expressionAttributeValues,
+            filterExpression: options.filterExpression,
+            indexName: options.indexName,
+            limit: options.limit,
+            projectionExpression: options.projectionExpression,
+            returnConsumedCapacity: options.returnConsumedCapacity,
+            scanFilter: nil,
+            segment: nil,
+            select: options.select,
+            tableName: query.schema.tableName,
+            totalSegments: nil
+        )
+    }
+}
+
 // MARK: - Helpers
 
 extension DynamoQuery.Value {

@@ -53,7 +53,7 @@ extension DynamoDB {
 
         if _shouldUseScan(for: query) {
             // use scan.
-            return self.scan(.init(tableName: query.schema.tableName))
+            return self.scan(.from(query))
                 .map { output in
                     callback(.init(database: self, output: .list(output.items!)))
                 }
