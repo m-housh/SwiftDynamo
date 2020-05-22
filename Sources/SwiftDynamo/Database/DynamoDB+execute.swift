@@ -55,13 +55,13 @@ extension DynamoDB {
             // use scan.
             return self.scan(.from(query))
                 .map { output in
-                    callback(.init(database: self, output: .list(output.items!)))
+                    callback(.init(database: self, output: .list(output.items!, output.lastEvaluatedKey)))
                 }
         } else {
             // use query when a sort / partition key is available.
             return self.query(.from(query))
                 .map { output in
-                    callback(.init(database: self, output: .list(output.items!)))
+                    callback(.init(database: self, output: .list(output.items!, output.lastEvaluatedKey)))
                 }
         }
     }

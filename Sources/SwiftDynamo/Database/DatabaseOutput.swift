@@ -22,7 +22,7 @@ public struct DatabaseOutput {
     /// These should come in as either a single item representation (`dictionary`) or
     /// a multi-item representation (`list` of `dictionaries`).
     public enum Output {
-        case list([[String: DynamoDB.AttributeValue]])
+        case list([[String: DynamoDB.AttributeValue]], [String: DynamoDB.AttributeValue]?)
         case dictionary([String: DynamoDB.AttributeValue])
     }
 
@@ -34,7 +34,7 @@ public struct DatabaseOutput {
     /// Returns the attribute for a given key / field name.
     private func attribute(_ field: String) -> DynamoDB.AttributeValue? {
         switch output {
-        case let .list(list):
+        case let .list(list, _):
             let dict = list.first(where: { $0.keys.contains(field) })
             return dict?[field]
         case let .dictionary(dict):

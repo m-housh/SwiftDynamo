@@ -198,7 +198,7 @@ extension DynamoQueryBuilder {
     /// Runs the query and returns all items.
     public func all() -> EventLoopFuture<[Model]> {
         var models = [Result<Model, Error>]()
-        return self.all { model in
+        return self.all { (model, _) in
             models.append(model)
         }
         .flatMapThrowing {
@@ -208,23 +208,46 @@ extension DynamoQueryBuilder {
         }
     }
 
+    public func paginate(limit: Int = 50, last: [String: DynamoDB.AttributeValue]? = nil) -> EventLoopFuture<PaginatedResponse<Model>> {
+        var models = [Result<Model, Error>]()
+        var lastEvaluatedKey: [String: DynamoDB.AttributeValue]? = nil
+        // set the start key, if this is not the first page request.
+        if let strongLast = last {
+            self.setOption(.exclusiveStartKey(strongLast))
+        }
+
+        // Set the limit
+        self.limit(limit)
+
+        return self.all { (model, lastEvaluated) in
+            models.append(model)
+            lastEvaluatedKey = lastEvaluated
+        }
+        .flatMapThrowing {
+            return try models.map {
+                try $0.get()
+            }
+        }
+        .map { PaginatedResponse(items: $0, lastEvaluatedKey: lastEvaluatedKey) }
+    }
+
     /// Run the query and react to each model that was returned one at a time.
     ///
     /// - parameters:
     ///     - onOutput: The callback that reacts to the generated model.
-    public func all(_ onOutput: @escaping (Result<Model, Error>) -> ()) -> EventLoopFuture<Void> {
+    public func all(_ onOutput: @escaping (Result<Model, Error>, [String: DynamoDB.AttributeValue]?) -> ()) -> EventLoopFuture<Void> {
         var all = [Model]()
 
         return self.run { output in
             switch output.output {
-            case let .list(rows):
+            case let .list(rows, last):
                 for row in rows {
                     onOutput(.init(catching: {
                         let model = Model()
                         try model.output(from: .init(database: output.database, output: .dictionary(row)))
                         all.append(model)
                         return model
-                    }))
+                    }), last)
                 }
             case let .dictionary(row):
                 onOutput(.init(catching: {
@@ -232,7 +255,7 @@ extension DynamoQueryBuilder {
                     try model.output(from: .init(database: output.database, output: .dictionary(row)))
                     all.append(model)
                     return model
-                }))
+                }), nil)
             }
         }
     }

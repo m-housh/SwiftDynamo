@@ -588,6 +588,32 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         XCTAssertEqual(model2.databaseKey["SortKey"]!.s, "foo.bar")
     }
 
+    func test_PaginatedRequest() throws {
+        try runTest(seed: true) {
+            let page1 = try TestModel.query(on: database)
+                .paginate(limit: 2)
+                .wait()
+            XCTAssertEqual(page1.items.count, 2)
+            XCTAssertNotNil(page1.lastEvaluatedKey)
+
+            let page2 = try TestModel.query(on: database)
+                .paginate(limit: 3, last: page1.lastEvaluatedKey)
+                .wait()
+
+            XCTAssertEqual(page2.items.count, 3)
+            XCTAssertNotEqual(page2.items, page1.items)
+            XCTAssertNotNil(page2.lastEvaluatedKey)
+
+
+            let page3 = try TestModel.query(on: database)
+                .paginate(limit: 3, last: page2.lastEvaluatedKey)
+                .wait()
+
+            XCTAssertEqual(page3.items.count, 1)
+            XCTAssertNil(page3.lastEvaluatedKey)
+        }
+    }
+
     // MARK: - Helpers
     var seeds: [TestModel] = [
         TestModel(id: .init(), title: "One", completed: false, order: 1),
