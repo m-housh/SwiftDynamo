@@ -94,19 +94,13 @@ extension AttributeConvertibleTests {
 
 extension AttributeConvertibleTests.AttributeConvertibleTestModel: AttributeConvertible {
 
-    init(from output: [String : DynamoDB.AttributeValue]) throws {
-        guard let idString = output["TodoID"]?.s,
-            let id = UUID(uuidString: idString),
-            let title = output["Title"]?.s,
-            let completed = output["Completed"]?.bool else {
-                throw AttributeError.invalidAttribute
-        }
-        self.id = id
-        self.title = title
-        self.completed = completed
-        if let orderString = output["Order"]?.n {
-            self.order = Int(orderString)
-        }
+    init(from output: DatabaseOutput) throws {
+        self.init(
+            id: try output.decode("TodoID", as: UUID.self),
+            title: try output.decode("Title", as: String.self),
+            order: try? output.decode("Order", as: Int.self),
+            completed: try output.decode("Completed", as: Bool.self)
+        )
     }
 
     func encode() -> [String : DynamoQuery.Value] {

@@ -267,8 +267,8 @@ extension AnyModel where Self: AttributeConvertible {
         self.input
     }
 
-    public init(from output: [String : DynamoDB.AttributeValue]) throws {
+    public init(from output: DatabaseOutput) throws {
         self.init()
-        try self.output(from: .init(database: nil, output: .dictionary(output)))
+        try self.output(from: output)
     }
 }
