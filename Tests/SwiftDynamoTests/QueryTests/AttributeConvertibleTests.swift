@@ -43,6 +43,43 @@ final class AttributeConvertibleTests: XCTestCase {
             .delete()
             .wait()
     }
+
+    func test_AttributeConvertibal_save_as_array() throws {
+        let items = [
+            AttributeConvertibleTestModel(id: .init(), title: "one", order: 1, completed: true),
+            AttributeConvertibleTestModel(id: .init(), title: "two", order: 2, completed: false)
+        ]
+
+        let sut1 = try AttributeConvertibleTestModel
+            .query(tableName, on: database)
+            .all()
+            .wait()
+
+        XCTAssertEqual(sut1.count, 0)
+
+        try AttributeConvertibleTestModel
+            .query(tableName, on: database)
+            .set(items)
+            .setAction(to: .batchCreate)
+            .run()
+            .wait()
+
+        let sut2 = try AttributeConvertibleTestModel
+            .query(tableName, on: database)
+            .all()
+            .wait()
+
+        XCTAssertEqual(sut2.count, 2)
+
+        for item in items {
+            try AttributeConvertibleTestModel
+                .query(tableName, on: database)
+                .setSortKey(sortKey: "TodoID", to: item.id)
+                .setPartitionKey(partitionKey: "ListID", to: "list")
+                .delete()
+                .wait()
+        }
+    }
 }
 
 extension AttributeConvertibleTests {
