@@ -142,4 +142,17 @@ final class QueryBuilderTests: XCTestCase {
                        "#ID = :partitionID AND begins_with(#Foo, :Foo)")
 
     }
+
+    func testSetIndex() {
+        let query = TestModel.query(on: database).setIndex("Foo").query
+        let sut1 = query.optionsContainer
+        XCTAssertEqual(sut1.indexName, "Foo")
+    }
+
+    func testSetTable() {
+        let sut1 = TestModel.query(on: database).setTable(.init("Foo")).query
+        XCTAssertEqual(sut1.schema.tableName, "Foo")
+        let sut2 = TestModel.query(on: database).setTable("Bar").query
+        XCTAssertEqual(sut2.schema.tableName, "Bar")
+    }
 }

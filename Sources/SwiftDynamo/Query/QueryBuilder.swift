@@ -142,6 +142,34 @@ public final class DynamoQueryBuilder<Model> {
         return self
     }
 
+    /// Set the global index for the query.
+    ///
+    /// - Parameters:
+    ///     - index: The global index name.
+    @discardableResult
+    public func setIndex(_ index: String) -> Self {
+        setOption(.indexName(index))
+    }
+
+    /// Override the table schema for the query.
+    ///
+    /// - Parameters:
+    ///     - table: The table schema.
+    @discardableResult
+    public func setTable(_ table: DynamoSchema) -> Self {
+        query.schema = table
+        return self
+    }
+
+    /// Override the table schema for the query.
+    ///
+    /// - Parameters:
+    ///     - table: The table name.
+    @discardableResult
+    public func setTable(_ table: String) -> Self {
+        setTable(DynamoSchema(table))
+    }
+
     // MARK: - Actions
 
     /// Set the action of the query.
