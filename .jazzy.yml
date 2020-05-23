@@ -1,0 +1,7 @@
+module: SwiftDynamo
+author: Michael Housh_
+title: SwiftDynamo
+
+swift_build_tool: spm
+
+theme: fullwidth
