@@ -11,6 +11,8 @@ import NIO
 import DynamoCoder
 //swiftlint:disable force_try cyclomatic_complexity
 
+/// Holds database input and options for a database operation.  You typically do not work
+/// directly with a query, but with a `DynamoQueryBuilder` instead.
 public struct DynamoQuery {
 
     /// The action we are taking on the database.

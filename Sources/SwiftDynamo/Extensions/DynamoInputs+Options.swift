@@ -270,6 +270,11 @@ extension DynamoQuery {
             key[partitionKey.0] = try! partitionKey.1.attributeValue()
         }
 
+        // add sort key if it's available.
+        if let sortKey = self.sortKey {
+            key[sortKey.0] = try! sortKey.1.attributeValue()
+        }
+
         return key
     }
 }
