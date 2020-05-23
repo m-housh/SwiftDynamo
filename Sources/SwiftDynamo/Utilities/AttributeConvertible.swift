@@ -22,7 +22,7 @@ public protocol AttributeDecodable: Decodable {
     ///
     /// - Parameters:
     ///     - output:  The database output.
-    init(from output: [String: DynamoDB.AttributeValue]) throws
+    init(from output: DatabaseOutput) throws
 }
 
 /// A type that encode / decode itself for database queries.

@@ -215,14 +215,14 @@ public final class DynamoQueryBuilder<Model> {
             case let .list(rows, last):
                 for row in rows {
                     onOutput(.init(catching: {
-                        let model = try T.init(from: row)
+                        let model = try T.init(from: .init(database: self.database, output: .dictionary(row)))
                         all.append(model)
                         return model
                     }), last)
                 }
-            case let .dictionary(row):
+            case .dictionary:
                 onOutput(.init(catching: {
-                    let model = try T.init(from: row)
+                    let model = try T.init(from: output)
                     all.append(model)
                     return model
                 }), nil)
