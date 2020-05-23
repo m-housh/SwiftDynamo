@@ -18,6 +18,14 @@ public struct DatabaseOutput {
     /// The actual output.
     public let output: Output
 
+    public init(
+        database: DynamoDB? = nil,
+        output: Output
+    ) {
+        self.database = database
+        self.output = output
+    }
+
     /// Output from a database query / event.
     /// These should come in as either a single item representation (`dictionary`) or
     /// a multi-item representation (`list` of `dictionaries`).
