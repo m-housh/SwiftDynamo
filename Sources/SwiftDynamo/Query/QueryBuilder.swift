@@ -9,10 +9,8 @@ import Foundation
 import DynamoDB
 import NIO
 
-// MARK: - TODO
-//  add partition key method.
 /// Used to build / set options on a query before executing on the database.
-public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
+public final class DynamoQueryBuilder<Model> {
 
     /// The query we are building.
     public var query: DynamoQuery
@@ -20,13 +18,9 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     /// The database to run the query on.
     public let database: DynamoDB
 
-    /// Create a new query builder.
-    ///
-    /// - parameters:
-    ///     - database: The database to run the query on.
-    public init(database: DynamoDB) {
+    public init(schema: DynamoSchema, database: DynamoDB) {
         self.database = database
-        self.query = .init(schema: Model.schema)
+        self.query = DynamoQuery(schema: schema)
     }
 
     @discardableResult
@@ -56,12 +50,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
-    public func setSortKey<Value>(_ sortKey: KeyPath<Model, SortKey<Value>>, to value: Value, method: DynamoQuery.Filter.Method = .equal) -> Self {
-        query.sortKey = (Model.key(for: sortKey), .bind(value), method)
-        return self
-    }
-
-    @discardableResult
     public func setPartitionKey(partitionKey key: String, to value: Encodable) -> Self {
         query.partitionKey = (key, .bind(value))
         return self
@@ -75,6 +63,13 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     @discardableResult
     public func set(_ data: [String: DynamoQuery.Value]) -> Self {
         query.input.append(.dictionary(data))
+        return self
+    }
+
+    /// Set query input to an `AttributeEncodable` type.
+    @discardableResult
+    public func set<T>(_ data: T) -> Self where T: AttributeEncodable {
+        query.input.append(.dictionary(data.encode()))
         return self
     }
 
@@ -93,30 +88,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     }
 
     @discardableResult
-    public func set<Value>(
-        _ key: KeyPath<Model, Field<Value>>,
-        to value: Value
-    ) -> Self
-        where Value: Codable
-    {
-        let fieldKey = Model()[keyPath: key].field.key
-        query.input.append(.dictionary([fieldKey: .bind(value)]))
-        return self
-    }
-
-    @discardableResult
-    public func set<Value>(
-        _ key: KeyPath<Model, ID<Value>>,
-        to value: Value
-    ) -> Self
-        where Value: Codable
-    {
-        let fieldKey = Model()[keyPath: key].field.key
-        query.input.append(.dictionary([fieldKey: .bind(value)]))
-        return self
-    }
-
-    @discardableResult
     public func setOption(_ option: DynamoQuery.Option) -> Self {
         query.options.append(option)
         return self
@@ -127,36 +98,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
     @discardableResult
     public func filter(_ filter: DynamoQuery.Filter) -> Self {
         query.filters.append(filter)
-        return self
-    }
-
-    @discardableResult
-    public func filter(_ filter: DynamoModelValueFilter<Model>) -> Self {
-        self.filter(
-            .field(filter.key, filter.method, filter.value)
-        )
-    }
-
-    @discardableResult
-    public func filter<Value>(
-        _ field: KeyPath<Model, Field<Value>>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Value
-    ) -> Self
-        where Value: Codable
-    {
-        return self.filter(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
-    }
-
-    @discardableResult
-    public func filter<Value, Field>(
-        _ field: KeyPath<Model, Field>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Value
-    ) -> Self
-        where Field: FieldRepresentible, Field.Value == Value
-    {
-        query.filters.append(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
         return self
     }
 
@@ -182,9 +123,54 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         query.action = .delete
         return self.run()
     }
+
+    /// Run the query and react to each `AttributeDecodable` that was returned one at a time.
+    ///
+    /// - parameters:
+    ///     - onOutput: The callback that reacts to the generated model.
+    public func all<T>(
+        decodeTo: T.Type,
+        _ onOutput: @escaping (Result<T, Error>, [String: DynamoDB.AttributeValue]?) -> Void
+    ) -> EventLoopFuture<Void>
+        where T: AttributeDecodable
+    {
+        var all = [T]()
+
+        return self.run { output in
+            switch output.output {
+            case let .list(rows, last):
+                for row in rows {
+                    onOutput(.init(catching: {
+                        let model = try T.init(from: row)
+                        all.append(model)
+                        return model
+                    }), last)
+                }
+            case let .dictionary(row):
+                onOutput(.init(catching: {
+                    let model = try T.init(from: row)
+                    all.append(model)
+                    return model
+                }), nil)
+            }
+        }
+    }
+
+    /// Run the query and react to the results.
+    ///
+    /// - parameters:
+    ///     - onOutput: A callback that recieves the query results.
+    public func run(_ onOutput: @escaping (DatabaseOutput) -> Void) -> EventLoopFuture<Void> {
+        database.execute(query: query, onResult: onOutput)
+    }
+
+    /// Runs the query and ignores results.
+    public func run() -> EventLoopFuture<Void> {
+        self.run({ _ in })
+    }
 }
 
-extension DynamoQueryBuilder {
+extension DynamoQueryBuilder where Model: AttributeDecodable {
 
     /// Runs the query returning the first item, if it exists.
     public func first() -> EventLoopFuture<Model?> {
@@ -207,76 +193,17 @@ extension DynamoQueryBuilder {
         }
     }
 
-    /// Runs the query and returns a paginated result.  You retrieve the first page by not passing in a last evaluated key.
-    /// You can retrieve the next page by passing in the last evaluated key.
-    ///
-    /// - Parameters:
-    ///     - limit:  The number of items per page.
-    ///     - last:  The last evaluated key, returned by previous paginated query.
-    public func paginate(limit: Int = 50, last: [String: DynamoDB.AttributeValue]? = nil) -> EventLoopFuture<PaginatedResponse<Model>> {
-        var models = [Result<Model, Error>]()
-        var lastEvaluatedKey: [String: DynamoDB.AttributeValue]?
-        // set the start key, if this is not the first page request.
-        if let strongLast = last {
-            self.setOption(.exclusiveStartKey(strongLast))
-        }
-
-        // Set the limit
-        self.limit(limit)
-
-        return self.all { (model, lastEvaluated) in
-            models.append(model)
-            lastEvaluatedKey = lastEvaluated
-        }
-        .flatMapThrowing {
-            return try models.map {
-                try $0.get()
-            }
-        }
-        .map { PaginatedResponse(items: $0, lastEvaluatedKey: lastEvaluatedKey) }
-    }
-
     /// Run the query and react to each model that was returned one at a time.
     ///
     /// - parameters:
     ///     - onOutput: The callback that reacts to the generated model.
-    public func all(_ onOutput: @escaping (Result<Model, Error>, [String: DynamoDB.AttributeValue]?) -> Void) -> EventLoopFuture<Void> {
-        var all = [Model]()
-
-        return self.run { output in
-            switch output.output {
-            case let .list(rows, last):
-                for row in rows {
-                    onOutput(.init(catching: {
-                        let model = Model()
-                        try model.output(from: .init(database: output.database, output: .dictionary(row)))
-                        all.append(model)
-                        return model
-                    }), last)
-                }
-            case let .dictionary(row):
-                onOutput(.init(catching: {
-                    let model = Model()
-                    try model.output(from: .init(database: output.database, output: .dictionary(row)))
-                    all.append(model)
-                    return model
-                }), nil)
-            }
-        }
+    public func all(
+        _ onOutput: @escaping (Result<Model, Error>, [String: DynamoDB.AttributeValue]?) -> Void
+    ) -> EventLoopFuture<Void>
+    {
+        self.all(decodeTo: Model.self, onOutput)
     }
 
-    /// Run the query and react to the results.
-    ///
-    /// - parameters:
-    ///     - onOutput: A callback that recieves the query results.
-    public func run(_ onOutput: @escaping (DatabaseOutput) -> Void) -> EventLoopFuture<Void> {
-        database.execute(query: query, onResult: onOutput)
-    }
-
-    /// Runs the query and ignores results.
-    public func run() -> EventLoopFuture<Void> {
-        self.run({ _ in })
-    }
 }
 
 // MARK: - Field Value Filters
@@ -314,12 +241,79 @@ public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
 extension DynamoQuery.Filter.FieldFilterKey {
 
     init(field: AnyField) {
-//        print("key: \(field.key)")
-//        print("partitionKey: \(field.partitionKey)")
-//        print("sortKey: \(field.sortKey)")
-//        print(field)
         self.key = field.key
         self.isPartitionKey = field.partitionKey
         self.isSortKey = field.sortKey
+    }
+}
+
+extension DynamoQueryBuilder where Model: DynamoModel {
+    /// Create a new query builder.
+    ///
+    /// - parameters:
+    ///     - database: The database to run the query on.
+    public convenience init(database: DynamoDB) {
+        self.init(schema: Model.schema, database: database)
+    }
+
+
+    @discardableResult
+    public func setSortKey<Value>(_ sortKey: KeyPath<Model, SortKey<Value>>, to value: Value, method: DynamoQuery.Filter.Method = .equal) -> Self {
+        query.sortKey = (Model.key(for: sortKey), .bind(value), method)
+        return self
+    }
+
+    @discardableResult
+    public func set<Value>(
+        _ key: KeyPath<Model, Field<Value>>,
+        to value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let fieldKey = Model()[keyPath: key].field.key
+        query.input.append(.dictionary([fieldKey: .bind(value)]))
+        return self
+    }
+
+    @discardableResult
+    public func set<Value>(
+        _ key: KeyPath<Model, ID<Value>>,
+        to value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        let fieldKey = Model()[keyPath: key].field.key
+        query.input.append(.dictionary([fieldKey: .bind(value)]))
+        return self
+    }
+
+    @discardableResult
+    public func filter(_ filter: DynamoModelValueFilter<Model>) -> Self {
+        self.filter(
+            .field(filter.key, filter.method, filter.value)
+        )
+    }
+
+    @discardableResult
+    public func filter<Value>(
+        _ field: KeyPath<Model, Field<Value>>,
+        _ method: DynamoQuery.Filter.Method,
+        _ value: Value
+    ) -> Self
+        where Value: Codable
+    {
+        return self.filter(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
+    }
+
+    @discardableResult
+    public func filter<Value, Field>(
+        _ field: KeyPath<Model, Field>,
+        _ method: DynamoQuery.Filter.Method,
+        _ value: Value
+    ) -> Self
+        where Field: FieldRepresentible, Field.Value == Value
+    {
+        query.filters.append(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
+        return self
     }
 }

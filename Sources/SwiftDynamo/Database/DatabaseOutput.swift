@@ -13,7 +13,7 @@ import DynamoCoder
 public struct DatabaseOutput {
 
     /// The database the output was created on.
-    public let database: DynamoDB
+    public let database: DynamoDB?
 
     /// The actual output.
     public let output: Output

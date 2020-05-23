@@ -25,7 +25,7 @@ public protocol AnyModel: class, Codable {
 //          of ID all together and find a way to create / mark composite keys.
 
 /// A model that is specifically for `DynamoDB`.
-public protocol DynamoModel: AnyModel {
+public protocol DynamoModel: AnyModel, AttributeConvertible {
 
     /// The id value used for the model.
     associatedtype IDValue: Codable, Hashable
@@ -258,5 +258,17 @@ enum ModelCodingKey: CodingKey {
 
     init?(intValue: Int) {
         self = .int(intValue)
+    }
+}
+
+extension AnyModel where Self: AttributeConvertible {
+
+    public func encode() -> [String : DynamoQuery.Value] {
+        self.input
+    }
+
+    public init(from output: [String : DynamoDB.AttributeValue]) throws {
+        self.init()
+        try self.output(from: .init(database: nil, output: .dictionary(output)))
     }
 }

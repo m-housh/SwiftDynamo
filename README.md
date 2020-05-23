@@ -268,7 +268,8 @@ final class TodoStoreTests: XCTestCase, XCTDynamo {
 - [x] Custom encoder and decoder to convert `Codable` types to types that `aws-sdk-swift` expects.
 - [ ] Sorting capabilities.
 - [ ] More filtering options.
-- [ ] Batch queries and writes.
+- [x] Batch queries and writes.
+- [x] Paginated queries.
 
 ## Contributing
 
