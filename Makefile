@@ -48,3 +48,5 @@ scan_partition_table:
 		--endpoint-url $(ENDPOINT) \
 		--table-name $(PARTITION_TABLE)
 
+lint:
+	@swiftlint

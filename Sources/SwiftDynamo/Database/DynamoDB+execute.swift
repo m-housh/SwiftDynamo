@@ -18,7 +18,7 @@ extension DynamoDB {
     ///     - onResult: A callback to run with the resulting output.
     public func execute(
         query: DynamoQuery,
-        onResult callback: @escaping (DatabaseOutput) -> ()
+        onResult callback: @escaping (DatabaseOutput) -> Void
     ) -> EventLoopFuture<Void> {
         switch query.action {
         case .read, .scan, .query: return _read(query, onResult: callback)
@@ -39,16 +39,12 @@ extension DynamoDB {
             .map { _ in }
     }
 
-    // MARK: - TODO
-    //          We need to build a filter expression for scan and
-    //          only run query if both a partition key is available
-    
     // run a read query.
     // If no sort key / partition keys are on the query then we use
     // the more intrusive `scan`.  We use `query` otherwise.
     private func _read(
         _ query: DynamoQuery,
-        onResult callback: @escaping (DatabaseOutput) -> ()
+        onResult callback: @escaping (DatabaseOutput) -> Void
     ) -> EventLoopFuture<Void> {
 
         if _shouldUseScan(for: query) {
@@ -66,11 +62,6 @@ extension DynamoDB {
         }
     }
 
-    // MARK: - TODO
-    //          This needs to be based off of partition key only,
-    //          to allow for scan to be used with a sort-key to filter
-    //          the results.  We also need to build the filter expression
-    //          for a scan request instead of scanning entire table.
     private func _shouldUseScan(for query: DynamoQuery) -> Bool {
         if query.action == .scan { return true }
         if query.action == .query { return false }
@@ -80,7 +71,7 @@ extension DynamoDB {
         // check options
         let options = query.optionsContainer
 
-        if let _ = options.keyConditionExpression { return false }
+        if options.keyConditionExpression != nil { return false }
 
         return true
     }
@@ -88,7 +79,7 @@ extension DynamoDB {
     // Create a single item in the database.
     private func _create(
         _ query: DynamoQuery,
-        onResult callback: @escaping (DatabaseOutput) -> ()
+        onResult callback: @escaping (DatabaseOutput) -> Void
     ) -> EventLoopFuture<Void> {
         let putItemInput = DynamoDB.PutItemInput.from(query)
         return self.putItem(putItemInput)
@@ -100,7 +91,7 @@ extension DynamoDB {
     // update a single item in the database
     private func _update(
         _ query: DynamoQuery,
-        onResult callback: @escaping (DatabaseOutput) -> ()
+        onResult callback: @escaping (DatabaseOutput) -> Void
     ) -> EventLoopFuture<Void> {
         let updateItemInput = DynamoDB.UpdateItemInput.from(query)
         return self.updateItem(updateItemInput)
@@ -109,13 +100,13 @@ extension DynamoDB {
             }
     }
 
-    // MARK: - TODO:
-            // the batch items need to be limited to 25 items, so either need to loop over them
-            // or add a precondition.
+    // the batch items need to be limited to 25 items, so either need to loop over them
+    // or add a precondition.
     private func _batchCreate(
         _ query: DynamoQuery,
-        onResult callback: @escaping (DatabaseOutput) -> ()
+        onResult callback: @escaping (DatabaseOutput) -> Void
     ) -> EventLoopFuture<Void> {
+        // swiftlint:disable force_try
         let batchInput = try! DynamoDB.BatchWriteItemInput.createRequest(from: query)
         return self.batchWriteItem(batchInput)
             .map { output in

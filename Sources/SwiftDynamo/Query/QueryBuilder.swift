@@ -11,7 +11,6 @@ import NIO
 
 // MARK: - TODO
 //  add partition key method.
-
 /// Used to build / set options on a query before executing on the database.
 public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
@@ -117,7 +116,6 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
         return self
     }
 
-
     @discardableResult
     public func setOption(_ option: DynamoQuery.Option) -> Self {
         query.options.append(option)
@@ -188,6 +186,7 @@ public final class DynamoQueryBuilder<Model> where Model: DynamoModel {
 
 extension DynamoQueryBuilder {
 
+    /// Runs the query returning the first item, if it exists.
     public func first() -> EventLoopFuture<Model?> {
         return self
             .limit(1)
@@ -208,9 +207,15 @@ extension DynamoQueryBuilder {
         }
     }
 
+    /// Runs the query and returns a paginated result.  You retrieve the first page by not passing in a last evaluated key.
+    /// You can retrieve the next page by passing in the last evaluated key.
+    ///
+    /// - Parameters:
+    ///     - limit:  The number of items per page.
+    ///     - last:  The last evaluated key, returned by previous paginated query.
     public func paginate(limit: Int = 50, last: [String: DynamoDB.AttributeValue]? = nil) -> EventLoopFuture<PaginatedResponse<Model>> {
         var models = [Result<Model, Error>]()
-        var lastEvaluatedKey: [String: DynamoDB.AttributeValue]? = nil
+        var lastEvaluatedKey: [String: DynamoDB.AttributeValue]?
         // set the start key, if this is not the first page request.
         if let strongLast = last {
             self.setOption(.exclusiveStartKey(strongLast))
@@ -235,7 +240,7 @@ extension DynamoQueryBuilder {
     ///
     /// - parameters:
     ///     - onOutput: The callback that reacts to the generated model.
-    public func all(_ onOutput: @escaping (Result<Model, Error>, [String: DynamoDB.AttributeValue]?) -> ()) -> EventLoopFuture<Void> {
+    public func all(_ onOutput: @escaping (Result<Model, Error>, [String: DynamoDB.AttributeValue]?) -> Void) -> EventLoopFuture<Void> {
         var all = [Model]()
 
         return self.run { output in
@@ -264,7 +269,7 @@ extension DynamoQueryBuilder {
     ///
     /// - parameters:
     ///     - onOutput: A callback that recieves the query results.
-    public func run(_ onOutput: @escaping (DatabaseOutput) -> ()) -> EventLoopFuture<Void> {
+    public func run(_ onOutput: @escaping (DatabaseOutput) -> Void) -> EventLoopFuture<Void> {
         database.execute(query: query, onResult: onOutput)
     }
 

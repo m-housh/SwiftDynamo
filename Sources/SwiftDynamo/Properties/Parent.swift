@@ -4,6 +4,7 @@
 //
 //  Created by Michael Housh on 1/24/20.
 //
+// swiftlint:disable unused_setter_value
 
 import Foundation
 

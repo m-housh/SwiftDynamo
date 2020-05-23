@@ -8,6 +8,7 @@
 import XCTest
 @testable import SwiftDynamo
 
+// swiftlint:disable force_try
 final class PropertyTests: XCTestCase {
 
     func testFieldOutputFails() {

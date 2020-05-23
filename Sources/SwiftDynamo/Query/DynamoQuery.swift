@@ -9,6 +9,7 @@ import Foundation
 import DynamoDB
 import NIO
 import DynamoCoder
+//swiftlint:disable force_try cyclomatic_complexity
 
 public struct DynamoQuery {
 
@@ -59,7 +60,7 @@ public struct DynamoQuery {
 
     /// A stack of filters that get set on the query.
     public var filters: [Filter]
-    
+
     /// Create an options container from current state.
     ///
     /// The options container is just a helper to properly set our current state and
@@ -130,7 +131,6 @@ extension DynamoQuery {
     }
 
     // MARK: - Options
-
     /// Holds primarily `aws` specific options for query inputs.  Not all options
     /// are valid for all types of queries, but we will allow users to
     /// set them and only use what's valid for a specific input.
@@ -184,7 +184,7 @@ extension DynamoQuery {
             case let .returnConsumedCapacity(consumed): options.returnConsumedCapacity = consumed
             case let .scanIndexForward(bool): options.scanIndexForward = bool
             case let .select(select): options.select = select
-            case let .conditionalOperator(_operator): options.conditionalOperator = _operator
+            case let .conditionalOperator(coperator): options.conditionalOperator = coperator
             case let .conditionExpression(string): options.conditionExpression = string
             case let .returnItemCollectionMetrics(metrics): options.returnItemCollectionMetrics = metrics
 
@@ -223,25 +223,25 @@ extension DynamoQuery {
     /// Not all options are valid for each type of query, but we hold them all and only use what is needed
     /// for a given request.
     internal struct OptionsContainer {
-        var limit: Int? = nil
-        var consistentRead: Bool? = nil
-        var exclusiveStartKey: [String: DynamoDB.AttributeValue]? = nil
-        var expressionAttributeNames: [String: String]? = nil
-        var expressionAttributeValues: [String: DynamoDB.AttributeValue]? = nil
-        var filterExpression: String? = nil
-        var indexName: String? = nil
-        var keyConditionExpression: String? = nil
-        var keyConditions: [String: DynamoDB.Condition]? = nil
-        var projectionExpression: String? = nil
-        var queryFilter: [String: DynamoDB.Condition]? = nil
-        var returnConsumedCapacity: DynamoDB.ReturnConsumedCapacity? = nil
-        var scanIndexForward: Bool? = nil
-        var select: DynamoDB.Select? = nil
-        var conditionalOperator: DynamoDB.ConditionalOperator? = nil
-        var conditionExpression: String? = nil
-        var returnItemCollectionMetrics: DynamoDB.ReturnItemCollectionMetrics? = nil
-        var sortKey: (String, Value, Filter.Method)? = nil
-        var partitionKey: (String, Value)? = nil
+        var limit: Int?
+        var consistentRead: Bool?
+        var exclusiveStartKey: [String: DynamoDB.AttributeValue]?
+        var expressionAttributeNames: [String: String]?
+        var expressionAttributeValues: [String: DynamoDB.AttributeValue]?
+        var filterExpression: String?
+        var indexName: String?
+        var keyConditionExpression: String?
+        var keyConditions: [String: DynamoDB.Condition]?
+        var projectionExpression: String?
+        var queryFilter: [String: DynamoDB.Condition]?
+        var returnConsumedCapacity: DynamoDB.ReturnConsumedCapacity?
+        var scanIndexForward: Bool?
+        var select: DynamoDB.Select?
+        var conditionalOperator: DynamoDB.ConditionalOperator?
+        var conditionExpression: String?
+        var returnItemCollectionMetrics: DynamoDB.ReturnItemCollectionMetrics?
+        var sortKey: (String, Value, Filter.Method)?
+        var partitionKey: (String, Value)?
     }
 
     // MARK: - Filter
@@ -269,7 +269,7 @@ extension DynamoQuery {
             // LHS is equal to RHS
             case equality(inverse: Bool)
 
-            case begins_with
+            case beginsWith
 
             /// Converts the method to the `aws` string representation for
             /// building the filter expression.
@@ -277,7 +277,7 @@ extension DynamoQuery {
                 switch self {
                 case let .equality(direction):
                     return direction != true ? "=" : "<>"
-                case .begins_with:
+                case .beginsWith:
                     return "begins_with"
                 }
             }
@@ -291,7 +291,7 @@ extension DynamoQuery {
                 switch self {
                 case .equality:
                     output += "\(key) \(description) \(value)"
-                case .begins_with:
+                case .beginsWith:
                     // begins_with(key, value)
                     output += "\(description)(\(key), \(value))"
                 }
@@ -391,25 +391,12 @@ extension DynamoQuery.OptionsContainer {
 
         let newValue = method.updateExpression(keyConditionExpression, key: key, value: expression)
         keyConditionExpression = newValue
-
-
-//        if keyConditionExpression == nil {
-//            keyConditionExpression = "\(key) \(method) \(expression)"
-//        } else {
-//            keyConditionExpression! += " and \(key) \(method) \(expression)"
-//        }
     }
 
     mutating func addFilterExpression(_ key: String, _ method: DynamoQuery.Filter.Method, _ expression: String) {
 
         let newValue = method.updateExpression(filterExpression, key: key, value: expression)
         filterExpression = newValue
-
-//        if filterExpression == nil {
-//            filterExpression = "\(key) \(method) \(expression)"
-//        } else {
-//            filterExpression! += " and \(key) \(method) \(expression)"
-//        }
     }
 
     init(query: DynamoQuery) {
@@ -418,7 +405,7 @@ extension DynamoQuery.OptionsContainer {
             .reduce(into: Self()) { $1.setOption(&$0) }
 
         // Add filter expressions.
-        if query.filters.count > 0 {
+        if !query.filters.isEmpty {
             for filter in query.filters {
                 switch filter {
                 case let .field(fieldKey, method, value):

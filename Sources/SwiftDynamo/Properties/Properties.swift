@@ -99,7 +99,7 @@ extension AnyModel {
 
     /// Whether any fields have been set / modified on a model.
     var hasChanges: Bool {
-        return input.count > 0
+        return !input.isEmpty
     }
 
     /// Returns all the fields attached / declared on a model. Along with their label.

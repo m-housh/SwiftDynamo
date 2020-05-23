@@ -37,7 +37,7 @@ public protocol DynamoModel: AnyModel {
 extension AnyModel {
 
     // MARK: - Codable
-    
+
     public init(from decoder: Decoder) throws {
         self.init()
         let container = try decoder.container(keyedBy: ModelCodingKey.self)
@@ -192,7 +192,6 @@ extension DynamoModel {
 
 extension AnyModel {
 
-
     /// Get the database key for a given field.
     ///
     /// - parameters:
@@ -208,11 +207,13 @@ extension AnyModel {
         guard let id = Mirror(reflecting: self).descendant("_id") else {
             fatalError("id property must be declared using @ID")
         }
+        // swiftlint:disable force_cast
         return id as! AnyID
     }
 
 }
 
+// swiftlint:disable identifier_name
 extension DynamoModel {
 
     /// A reference to our id field, this gets used to tell if an item / id
@@ -222,6 +223,7 @@ extension DynamoModel {
     }
 
 }
+// swiftlint:enable identifier_name force_cast
 
 enum ModelCodingKey: CodingKey {
 

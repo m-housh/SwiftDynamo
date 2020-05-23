@@ -84,6 +84,7 @@ final class QueryBuilderTests: XCTestCase {
 
         XCTAssertNotNil(builder.query.sortKey)
         XCTAssertEqual(builder.query.sortKey!.0, "SortKey")
+        // swiftlint:disable force_try
         XCTAssertEqual(try! builder.query.sortKey!.1.attributeValue().s, "foo")
 
     }
@@ -102,7 +103,6 @@ final class QueryBuilderTests: XCTestCase {
 
         let builder = ModelWithOutSortKey
             .query(on: .testing)
-
 
         XCTAssertNil(builder.query.sortKey)
         XCTAssertNil(builder.query.partitionKey)
@@ -136,7 +136,7 @@ final class QueryBuilderTests: XCTestCase {
 
         builder
             .setPartitionKey(partitionKey: "ID", to: 1)
-            .filter(\.$foo, .begins_with, "bar")
+            .filter(\.$foo, .beginsWith, "bar")
 
         XCTAssertEqual(builder.query.optionsContainer.keyConditionExpression!,
                        "#ID = :partitionID AND begins_with(#Foo, :Foo)")

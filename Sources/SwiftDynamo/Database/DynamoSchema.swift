@@ -7,10 +7,6 @@
 
 import Foundation
 
-// MARK: - TODO
-//  rename `sortKey` to partition key on the schema.  It should also have an optional
-//  default value.
-
 /// Stores the `DynamoDB` table name a static sort key if needed for the table.
 public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
 
@@ -23,7 +19,6 @@ public struct DynamoSchema: ExpressibleByStringLiteral, Equatable {
     public let sortKey: SortKey?
 
     public var partitionKey: PartitionKey?
-
 
     /// Create a new instance using the convenience `SortKey`.
     ///

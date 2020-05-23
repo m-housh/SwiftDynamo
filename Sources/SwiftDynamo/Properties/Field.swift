@@ -4,7 +4,7 @@
 //
 //  Created by Michael Housh on 1/16/20.
 //
-
+// swiftlint:disable force_cast
 import Foundation
 import DynamoDB
 import DynamoCoder
@@ -109,6 +109,7 @@ public class Field<Value>: AnyField, FieldRepresentible where Value: Codable {
     }
 }
 
+// swiftlint:disable identifier_name
 private protocol _Optional {
     static var _none: Any { get }
 }

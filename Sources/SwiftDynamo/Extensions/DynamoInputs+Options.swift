@@ -4,7 +4,7 @@
 //
 //  Created by Michael Housh on 1/21/20.
 //
-
+// swiftlint:disable force_cast force_try
 import Foundation
 import DynamoDB
 import DynamoCoder
@@ -41,7 +41,7 @@ extension DynamoDB.PutItemInput {
     // MARK: - PutItemInput
 
     static func from(_ query: DynamoQuery) -> DynamoDB.PutItemInput {
-        precondition(query.input.count > 0, "Invalid input count for put item.")
+        precondition(!query.input.isEmpty, "Invalid input count for put item.")
         let options = query.optionsContainer
 
         // convert the query input to [String: DynamoDB.AttributeValue]
@@ -71,11 +71,11 @@ extension DynamoDB.UpdateItemInput {
     // MARK: UpdateItemInput
 
     static func from(_ query: DynamoQuery) -> DynamoDB.UpdateItemInput {
-        precondition(query.input.count > 0, "Invalid input count for update item.")
-        precondition(query.filters.count > 0, "Invalid filter count for update item.")
+        precondition(!query.input.isEmpty, "Invalid input count for update item.")
+        precondition(!query.filters.isEmpty, "Invalid filter count for update item.")
 
         let key = query.key
-        assert(key.count > 0, "Invalid update item key")
+        assert(!key.isEmpty, "Invalid update item key")
 
         let options = query.optionsContainer
         let attributeUpdates = try! query.input
@@ -103,12 +103,12 @@ extension DynamoDB.UpdateItemInput {
 extension DynamoDB.BatchWriteItemInput {
 
     static func batchDeleteRequest(from query: DynamoQuery) -> DynamoDB.BatchWriteItemInput {
-        precondition(query.input.count > 0, "Invalid input count for batch delete.")
+        precondition(!query.input.isEmpty, "Invalid input count for batch delete.")
 
         let items = query.input.reduce(into: [DynamoDB.WriteRequest]()) { array, item in
             switch item {
             case let .key(key):
-                precondition(key.key.count > 0, "Invalid database key.")
+                precondition(!key.key.isEmpty, "Invalid database key.")
                 var databaseKey = key.key
 
                 // add default sort and partition keys.
@@ -134,7 +134,7 @@ extension DynamoDB.BatchWriteItemInput {
     }
 
     static func createRequest(from query: DynamoQuery) throws -> DynamoDB.BatchWriteItemInput {
-        precondition(query.input.count > 0, "Invalid input count for update item.")
+        precondition(!query.input.isEmpty, "Invalid input count for update item.")
         return try .init(requestItems: [query.schema.tableName: DynamoDB.WriteRequest.createRequest(from: query)])
     }
 }
@@ -228,7 +228,7 @@ extension DynamoQuery.Value {
     func attributeValue() throws -> DynamoDB.AttributeValue {
         switch self {
         case let .bind(encodable):
-            if let _ = encodable as? DynamoDB.AttributeValue {
+            if (encodable as? DynamoDB.AttributeValue) != nil {
                 return encodable as! DynamoDB.AttributeValue
             }
             return try encodable.convertToAttribute()
@@ -257,7 +257,7 @@ extension DynamoQuery {
         var key = [String: DynamoDB.AttributeValue]()
 
         // add filters to the key.
-        if filters.count > 0 {
+        if !filters.isEmpty {
             key = filters.reduce(into: key) { currentKey, filter in
                 for (key, value) in filter.key {
                     currentKey[key] = value

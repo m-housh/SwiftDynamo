@@ -4,7 +4,7 @@
 //
 //  Created by Michael Housh on 1/16/20.
 //
-
+// swiftlint:disable force_cast type_name
 import Foundation
 
 /// A type that can generate a random representation of itself.
@@ -61,7 +61,6 @@ public class ID<Value>: AnyID, FieldRepresentible, AnyField where Value: Codable
 
     // Expose ourself through the `$` prefix.
     public var projectedValue: ID<Value> { self }
-
 
     /// Create a new instance.
     ///

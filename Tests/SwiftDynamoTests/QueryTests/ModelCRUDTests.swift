@@ -5,7 +5,6 @@
 //  Created by Michael Housh on 1/22/20.
 //
 
-
 import XCTest
 import DynamoDB
 import XCTDynamo
@@ -18,7 +17,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
 
     func testFetchAll() throws {
         try runTest(seed: true) {
-            try self.fetchAll() { models in
+            try self.fetchAll { models in
                 XCTAssertEqual(models.count, self.seeds.count)
             }
         }
@@ -26,7 +25,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
 
     func testFetchAll2() throws {
         try runTest(seed: true) {
-            try fetchAll() { XCTAssert($0.count > 0) }
+            try fetchAll { XCTAssert(!$0.isEmpty) }
         }
     }
 
@@ -51,7 +50,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             model2.order = 2
 
             var beforeCount = 0
-            try fetchAll() { models in
+            try fetchAll { models in
                 beforeCount = models.count
             }
             .save(model2) { saved in
@@ -59,7 +58,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 XCTAssertEqual(saved.title, "Two")
                 XCTAssertEqual(saved.order, 2)
             }
-            .fetchAll() { models in
+            .fetchAll { models in
                 XCTAssertEqual(models.count, beforeCount + 1)
             }
             .find(id: model2.id!) { fetched in
@@ -69,7 +68,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 XCTAssertEqual(fetched!.order, 2)
             }
             .delete(model2.id!) { }
-            .fetchAll() { models in
+            .fetchAll { models in
                 XCTAssertEqual(models.count, beforeCount)
             }
         }
@@ -79,7 +78,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         try runTest(seed: true) {
             var random: TestModel!
             var beforeCount: Int = 0
-            try fetchAll() {
+            try fetchAll {
                 random = $0.randomElement()!
                 beforeCount = $0.count
             }
@@ -89,7 +88,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 XCTAssertEqual(random, saved)
                 XCTAssertEqual(saved.title, "Updated")
             }
-            .fetchAll() {
+            .fetchAll {
                 XCTAssertEqual(beforeCount, $0.count)
             }
         }
@@ -99,7 +98,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         try runTest(seed: true) {
             var random: TestModel!
             var beforeCount: Int = 0
-            try fetchAll() {
+            try fetchAll {
                 random = $0.randomElement()!
                 beforeCount = $0.count
             }
@@ -109,7 +108,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 XCTAssertEqual(random, saved)
                 XCTAssertEqual(saved.title, "Updated")
             }
-            .fetchAll() {
+            .fetchAll {
                 XCTAssertEqual(beforeCount, $0.count)
             }
         }
@@ -139,7 +138,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 XCTAssertEqual(afterSave!.title, "Patched")
                 XCTAssertEqual(afterSave!.completed, false)
             }
-            .fetchAll() {
+            .fetchAll {
                 XCTAssertEqual($0.count, beforeCount)
             }
         }
@@ -150,7 +149,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             var random: TestModel!
             var beforeCount: Int!
 
-            try fetchAll() {
+            try fetchAll {
                 random = $0.randomElement()!
                 beforeCount = $0.count
             }
@@ -166,7 +165,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 .update()
                 .wait()
 
-            try fetchAll() {
+            try fetchAll {
                 XCTAssertEqual($0.count, beforeCount)
             }
             .find(id: random.id!) { updated in
@@ -208,7 +207,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 XCTAssertEqual(afterSave!.completed, false)
                 XCTAssertEqual(saved, afterSave)
             }
-            .fetchAll() {
+            .fetchAll {
                 XCTAssertEqual($0.count, beforeCount)
             }
         }
@@ -239,7 +238,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             var random: TestModel!
             var beforeCount: Int!
 
-            try fetchAll() {
+            try fetchAll {
                 beforeCount = $0.count
                 random = $0.randomElement()!
             }
@@ -249,7 +248,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
                 .delete()
                 .wait()
 
-            try fetchAll() {
+            try fetchAll {
                 XCTAssertEqual($0.count, beforeCount - 1)
             }
             .find(id: random.id!) {
@@ -274,13 +273,13 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
 
             var beforeCount = 0
 
-            try fetchAll() { models in
+            try fetchAll { models in
                 _ = models.map { print($0) }
                 beforeCount = models.count
                 XCTAssertNotEqual(beforeCount, 0)
             }
             .delete(random.id!) { }
-            .fetchAll() { after in
+            .fetchAll { after in
                 XCTAssertEqual(after.count, beforeCount - 1)
                 XCTAssertNil(after.first(where: { $0.id == random.id }))
             }
@@ -291,7 +290,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         try runTest(seed: true) {
             var random: TestModel!
 
-            try fetchAll() { models in
+            try fetchAll { models in
                 random = models.randomElement()!
             }
             .find(id: random.id!) { fetched in
@@ -317,7 +316,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             var random: TestModel!
             var count: Int = 0
 
-            try fetchAll() {
+            try fetchAll {
                 random = $0.randomElement()!
                 count = $0.count
             }
@@ -473,9 +472,9 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             for first in fetchedFirsts { XCTAssert(firsts.contains(first)) }
             for last in fetchedLasts { XCTAssert(lasts.contains(last)) }
 
-            let _all = try PartitionTodo.query(on: database).all().wait()
+            let allModels = try PartitionTodo.query(on: database).all().wait()
 
-            _ = try _all.map { try PartitionTodo.delete(id: $0.id!, on: database).wait() }
+            _ = try allModels.map { try PartitionTodo.delete(id: $0.id!, on: database).wait() }
         }
         catch {
             print("ERROR: \(error)")
@@ -541,7 +540,7 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
         try runTest(seed: true) {
 
             try fetchAll { before in
-                XCTAssert(before.count > 0)
+                XCTAssert(!before.isEmpty)
                 try TestModel.batchDelete(self.seeds, on: self.database).wait()
             }
             .fetchAll {
@@ -603,7 +602,6 @@ final class ModelCRUDTests: XCTestCase, XCTDynamoTestCase {
             XCTAssertEqual(page2.items.count, 3)
             XCTAssertNotEqual(page2.items, page1.items)
             XCTAssertNotNil(page2.lastEvaluatedKey)
-
 
             let page3 = try TestModel.query(on: database)
                 .paginate(limit: 3, last: page2.lastEvaluatedKey)

@@ -35,7 +35,7 @@ final class TestModel: DynamoModel, Equatable, Codable, CustomStringConvertible 
         self.order = order
     }
 
-    static func ==(lhs: TestModel, rhs: TestModel) -> Bool {
+    static func == (lhs: TestModel, rhs: TestModel) -> Bool {
         lhs.id == rhs.id &&
             lhs.title == rhs.title &&
             lhs.order == rhs.order

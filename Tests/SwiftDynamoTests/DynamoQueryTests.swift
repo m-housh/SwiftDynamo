@@ -19,6 +19,7 @@ final class DynamoQueryTests: XCTestCase {
 
     }
 
+    // swiftlint:disable syntactic_sugar force_try
     func testAnyBindableOnOptional() {
         let some = try! (Optional<String>.some("Foo") as AnyBindable).convertToAttribute()
         XCTAssertEqual(some.s!, "Foo")
