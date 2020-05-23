@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Option Enumeration Reference</title>
+    <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../../js/jquery.min.js" defer></script>
+    <script src="../../js/jazzy.js" defer></script>
+    
+    <script src="../../js/lunr.min.js" defer></script>
+    <script src="../../js/typeahead.jquery.js" defer></script>
+    <script src="../../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Enum/Option" class="dashAnchor"></a>
+
+    <a title="Option Enumeration Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../../index.html">
+          SwiftDynamo
+        </a>
+         (67% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../../index.html">SwiftDynamo Reference</a>
+      <img class="carat" src="../../img/carat.png" />
+      Option Enumeration Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/CompositeSortKey.html">CompositeSortKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/DynamoQueryBuilder.html">DynamoQueryBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/Field.html">Field</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/ID.html">ID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/ID/Generator.html">– Generator</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/ID/IDType.html">– IDType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/Parent.html">Parent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Classes/SortKey.html">SortKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Enums/DynamoModelError.html">DynamoModelError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Extensions/DynamoDB.html">DynamoDB</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Extensions/Encodable.html">Encodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Extensions/UUID.html">UUID</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../../Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Functions.html#/s:11SwiftDynamo2neoiyAA0B16ModelValueFilterVyxGs7KeyPathCyxq_G_0E0Qy_tAA0bD0RzAA18FieldRepresentibleR_r0_lF">!=(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Functions.html#/s:11SwiftDynamo2eeoiyAA0B16ModelValueFilterVyxGs7KeyPathCyxq_G_0E0Qy_tAA0bD0RzAA18FieldRepresentibleR_r0_lF">==(_:_:)</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AnyDynamoDatabaseKey.html">AnyDynamoDatabaseKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AnyField.html">AnyField</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AnyModel.html">AnyModel</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AnyProperty.html">AnyProperty</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols.html#/s:11SwiftDynamo10AnySortKeyP">AnySortKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AttributeConvertible.html">AttributeConvertible</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AttributeDecodable.html">AttributeDecodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/AttributeEncodable.html">AttributeEncodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/DynamoModel.html">DynamoModel</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/FieldRepresentible.html">FieldRepresentible</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Protocols/RandomGeneratable.html">RandomGeneratable</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DatabaseOutput.html">DatabaseOutput</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DatabaseOutput/Output.html">– Output</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs.html#/s:11SwiftDynamo0B16ModelValueFilterV">DynamoModelValueFilter</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoQuery.html">DynamoQuery</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoQuery/Action.html">– Action</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoQuery/Value.html">– Value</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoQuery/Option.html">– Option</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoQuery/Filter.html">– Filter</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoSchema.html">DynamoSchema</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoSchema/SortKey.html">– SortKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/DynamoSchema/PartitionKey.html">– PartitionKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/PaginatedResponse.html">PaginatedResponse</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content top-matter">
+            <h1>Option</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Option</span></code></pre>
+
+                </div>
+              </div>
+            <p>Holds primarily <code>aws</code> specific options for query inputs.  Not all options
+are valid for all types of queries, but we will allow users to
+set them and only use what&rsquo;s valid for a specific input.</p>
+
+<p>These are items that aren&rsquo;t used as commonly / required or have an
+abstraction built around them to make them more meaningful.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO7sortKeyyAESS_AC5ValueOAC6FilterO6MethodOtcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/sortKey(_:_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO7sortKeyyAESS_AC5ValueOAC6FilterO6MethodOtcAEmF">sortKey(_:<wbr>_:<wbr>_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">sortKey</span><span class="p">(</span><span class="kt">String</span><span class="p">,</span> <span class="kt"><a href="../../Structs/DynamoQuery/Value.html">Value</a></span><span class="p">,</span> <span class="kt"><a href="../../Structs/DynamoQuery/Filter.html">Filter</a></span><span class="o">.</span><span class="kt">Method</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO12partitionKeyyAESS_AC5ValueOtcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/partitionKey(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO12partitionKeyyAESS_AC5ValueOtcAEmF">partitionKey(_:<wbr>_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">partitionKey</span><span class="p">(</span><span class="kt">String</span><span class="p">,</span> <span class="kt"><a href="../../Structs/DynamoQuery/Value.html">Value</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO5limityAESicAEmF"></a>
+                    <a name="//apple_ref/swift/Element/limit(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO5limityAESicAEmF">limit(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">limit</span><span class="p">(</span><span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO14consistentReadyAESbcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/consistentRead(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO14consistentReadyAESbcAEmF">consistentRead(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">consistentRead</span><span class="p">(</span><span class="kt">Bool</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO17exclusiveStartKeyyAESDySS0B2DBAGV14AttributeValueCGcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/exclusiveStartKey(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO17exclusiveStartKeyyAESDySS0B2DBAGV14AttributeValueCGcAEmF">exclusiveStartKey(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">exclusiveStartKey</span><span class="p">([</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">AttributeValue</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO24expressionAttributeNamesyAESDyS2SGcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/expressionAttributeNames(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO24expressionAttributeNamesyAESDyS2SGcAEmF">expressionAttributeNames(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">expressionAttributeNames</span><span class="p">([</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">String</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO25expressionAttributeValuesyAESDySS0B2DBAGV0F5ValueCGcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/expressionAttributeValues(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO25expressionAttributeValuesyAESDySS0B2DBAGV0F5ValueCGcAEmF">expressionAttributeValues(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">expressionAttributeValues</span><span class="p">([</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">AttributeValue</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO16filterExpressionyAESScAEmF"></a>
+                    <a name="//apple_ref/swift/Element/filterExpression(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO16filterExpressionyAESScAEmF">filterExpression(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">filterExpression</span><span class="p">(</span><span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO9indexNameyAESScAEmF"></a>
+                    <a name="//apple_ref/swift/Element/indexName(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO9indexNameyAESScAEmF">indexName(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">indexName</span><span class="p">(</span><span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO22keyConditionExpressionyAESScAEmF"></a>
+                    <a name="//apple_ref/swift/Element/keyConditionExpression(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO22keyConditionExpressionyAESScAEmF">keyConditionExpression(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">keyConditionExpression</span><span class="p">(</span><span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO13keyConditionsyAESDySS0B2DBAGV9ConditionVGcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/keyConditions(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO13keyConditionsyAESDySS0B2DBAGV9ConditionVGcAEmF">keyConditions(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">keyConditions</span><span class="p">([</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">Condition</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO20projectionExpressionyAESScAEmF"></a>
+                    <a name="//apple_ref/swift/Element/projectionExpression(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO20projectionExpressionyAESScAEmF">projectionExpression(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">projectionExpression</span><span class="p">(</span><span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO11queryFilteryAESDySS0B2DBAGV9ConditionVGcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/queryFilter(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO11queryFilteryAESDySS0B2DBAGV9ConditionVGcAEmF">queryFilter(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">queryFilter</span><span class="p">([</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">Condition</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO22returnConsumedCapacityyAE0B2DBAGV06ReturnfG0OcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/returnConsumedCapacity(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO22returnConsumedCapacityyAE0B2DBAGV06ReturnfG0OcAEmF">returnConsumedCapacity(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">returnConsumedCapacity</span><span class="p">(</span><span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">ReturnConsumedCapacity</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO16scanIndexForwardyAESbcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/scanIndexForward(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO16scanIndexForwardyAESbcAEmF">scanIndexForward(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">scanIndexForward</span><span class="p">(</span><span class="kt">Bool</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO6selectyAE0B2DBAGV6SelectOcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/select(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO6selectyAE0B2DBAGV6SelectOcAEmF">select(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">select</span><span class="p">(</span><span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">Select</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO19conditionalOperatoryAE0B2DBAGV011ConditionalF0OcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/conditionalOperator(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO19conditionalOperatoryAE0B2DBAGV011ConditionalF0OcAEmF">conditionalOperator(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">conditionalOperator</span><span class="p">(</span><span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">ConditionalOperator</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO19conditionExpressionyAESScAEmF"></a>
+                    <a name="//apple_ref/swift/Element/conditionExpression(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO19conditionExpressionyAESScAEmF">conditionExpression(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">conditionExpression</span><span class="p">(</span><span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11SwiftDynamo0B5QueryV6OptionO27returnItemCollectionMetricsyAE0B2DBAGV06ReturnfgH0OcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/returnItemCollectionMetrics(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11SwiftDynamo0B5QueryV6OptionO27returnItemCollectionMetricsyAE0B2DBAGV06ReturnfgH0OcAEmF">returnItemCollectionMetrics(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">returnItemCollectionMetrics</span><span class="p">(</span><span class="kt">DynamoDB</span><span class="o">.</span><span class="kt">ReturnItemCollectionMetrics</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2020 <a class="link" href="" target="_blank" rel="external">Michael Housh_</a>. All rights reserved. (Last updated: 2020-05-23)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

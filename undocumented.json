@@ -1,0 +1,579 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DatabaseOutput.swift",
+      "line": 21,
+      "symbol": "DatabaseOutput.init(database:output:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DatabaseOutput.swift",
+      "line": 33,
+      "symbol": "DatabaseOutput.Output.list(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DatabaseOutput.swift",
+      "line": 34,
+      "symbol": "DatabaseOutput.Output.dictionary(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 21,
+      "symbol": "DynamoSchema.partitionKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 66,
+      "symbol": "DynamoSchema.SortKey.key",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 67,
+      "symbol": "DynamoSchema.SortKey.value",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 69,
+      "symbol": "DynamoSchema.SortKey.init(key:default:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 75,
+      "symbol": "DynamoSchema.PartitionKey",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 77,
+      "symbol": "DynamoSchema.PartitionKey.key",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 78,
+      "symbol": "DynamoSchema.PartitionKey.value",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Database/DynamoSchema.swift",
+      "line": 80,
+      "symbol": "DynamoSchema.PartitionKey.init(key:default:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/DynamoModelError.swift",
+      "line": 10,
+      "symbol": "DynamoModelError",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/DynamoModelError.swift",
+      "line": 11,
+      "symbol": "DynamoModelError.attributeError",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/DynamoModelError.swift",
+      "line": 12,
+      "symbol": "DynamoModelError.notFound",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/DynamoModelError.swift",
+      "line": 13,
+      "symbol": "DynamoModelError.invalidField(key:valueType:error:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/DynamoModelError.swift",
+      "line": 15,
+      "symbol": "DynamoModelError.localizedDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel+CRUD.swift",
+      "line": 35,
+      "symbol": "DynamoModel.update(on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel+CRUD.swift",
+      "line": 57,
+      "symbol": "DynamoModel.find(id:on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel+CRUD.swift",
+      "line": 63,
+      "symbol": "DynamoModel.delete(id:on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel+CRUD.swift",
+      "line": 70,
+      "symbol": "DynamoModel.batchCreate(_:on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel+CRUD.swift",
+      "line": 78,
+      "symbol": "DynamoModel.batchDelete(_:on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel.swift",
+      "line": 20,
+      "symbol": "AnyModel.init()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Model/DynamoModel.swift",
+      "line": 266,
+      "symbol": "AnyModel.encode()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/CompositeSortKey.swift",
+      "line": 19,
+      "symbol": "CompositeSortKey.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/CompositeSortKey.swift",
+      "line": 31,
+      "symbol": "CompositeSortKey.projectedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/CompositeSortKey.swift",
+      "line": 36,
+      "symbol": "CompositeSortKey.generateSortKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/CompositeSortKey.swift",
+      "line": 38,
+      "symbol": "CompositeSortKey.generate(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/DatabaseKey.swift",
+      "line": 11,
+      "symbol": "AnyDynamoDatabaseKey",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/DatabaseKey.swift",
+      "line": 12,
+      "symbol": "AnyDynamoDatabaseKey.key",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Field.swift",
+      "line": 30,
+      "symbol": "Field.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Field.swift",
+      "line": 63,
+      "symbol": "Field.projectedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 29,
+      "symbol": "ID.Generator.user",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 30,
+      "symbol": "ID.Generator.random",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 57,
+      "symbol": "ID.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 63,
+      "symbol": "ID.projectedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 106,
+      "symbol": "ID.IDType",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 107,
+      "symbol": "ID.IDType.partitionKey",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 108,
+      "symbol": "ID.IDType.sortKey",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/ID.swift",
+      "line": 109,
+      "symbol": "ID.IDType.none",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Parent.swift",
+      "line": 12,
+      "symbol": "Parent",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Parent.swift",
+      "line": 15,
+      "symbol": "Parent.id",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Parent.swift",
+      "line": 17,
+      "symbol": "Parent.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Parent.swift",
+      "line": 27,
+      "symbol": "Parent.projectedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Parent.swift",
+      "line": 33,
+      "symbol": "Parent.init(key:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/Properties.swift",
+      "line": 54,
+      "symbol": "FieldRepresentible.Value",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/SortKey.swift",
+      "line": 18,
+      "symbol": "SortKey.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Properties/SortKey.swift",
+      "line": 27,
+      "symbol": "SortKey.projectedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 100,
+      "symbol": "DynamoQuery.Action.create",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 101,
+      "symbol": "DynamoQuery.Action.read",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 102,
+      "symbol": "DynamoQuery.Action.update",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 103,
+      "symbol": "DynamoQuery.Action.delete",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 104,
+      "symbol": "DynamoQuery.Action.batchDelete",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 105,
+      "symbol": "DynamoQuery.Action.batchCreate",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 108,
+      "symbol": "DynamoQuery.Action.scan",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 109,
+      "symbol": "DynamoQuery.Action.query",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 145,
+      "symbol": "DynamoQuery.Option.sortKey(_:_:_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 146,
+      "symbol": "DynamoQuery.Option.partitionKey(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 147,
+      "symbol": "DynamoQuery.Option.limit(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 153,
+      "symbol": "DynamoQuery.Option.consistentRead(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 154,
+      "symbol": "DynamoQuery.Option.exclusiveStartKey(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 155,
+      "symbol": "DynamoQuery.Option.expressionAttributeNames(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 156,
+      "symbol": "DynamoQuery.Option.expressionAttributeValues(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 157,
+      "symbol": "DynamoQuery.Option.filterExpression(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 158,
+      "symbol": "DynamoQuery.Option.indexName(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 159,
+      "symbol": "DynamoQuery.Option.keyConditionExpression(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 160,
+      "symbol": "DynamoQuery.Option.keyConditions(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 161,
+      "symbol": "DynamoQuery.Option.projectionExpression(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 162,
+      "symbol": "DynamoQuery.Option.queryFilter(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 163,
+      "symbol": "DynamoQuery.Option.returnConsumedCapacity(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 164,
+      "symbol": "DynamoQuery.Option.scanIndexForward(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 165,
+      "symbol": "DynamoQuery.Option.select(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 166,
+      "symbol": "DynamoQuery.Option.conditionalOperator(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 167,
+      "symbol": "DynamoQuery.Option.conditionExpression(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 168,
+      "symbol": "DynamoQuery.Option.returnItemCollectionMetrics(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 272,
+      "symbol": "DynamoQuery.Filter.Method.equality(inverse:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/DynamoQuery.swift",
+      "line": 274,
+      "symbol": "DynamoQuery.Filter.Method.beginsWith",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/QueryBuilder+filter.swift",
+      "line": 12,
+      "symbol": "==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/QueryBuilder+filter.swift",
+      "line": 17,
+      "symbol": "!=(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/QueryBuilder+filter.swift",
+      "line": 22,
+      "symbol": "DynamoModelValueFilter",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/QueryBuilder+filter.swift",
+      "line": 54,
+      "symbol": "DynamoQueryBuilder.filter(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/QueryBuilder+filter.swift",
+      "line": 61,
+      "symbol": "DynamoQueryBuilder.filter(_:_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo/Sources/SwiftDynamo/Query/QueryBuilder+filter.swift",
+      "line": 72,
+      "symbol": "DynamoQueryBuilder.filter(_:_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/runner/runners/2.262.1/work/SwiftDynamo/SwiftDynamo"
+}
