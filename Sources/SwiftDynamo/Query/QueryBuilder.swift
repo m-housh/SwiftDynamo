@@ -9,7 +9,7 @@ import Foundation
 import DynamoDB
 import NIO
 
-/// Used to build / set options on a query before executing on the database.
+/// Used to build / set options on a query and execute the query on the database.
 public final class DynamoQueryBuilder<Model> {
 
     /// The query we are building.
@@ -18,48 +18,82 @@ public final class DynamoQueryBuilder<Model> {
     /// The database to run the query on.
     public let database: DynamoDB
 
+    /// Create a new query builder for the given table schema and database.
+    ///
+    /// - Parameters:
+    ///     - schema: The table schema for the query.
+    ///     - database: The database to run the query on.
     public init(schema: DynamoSchema, database: DynamoDB) {
         self.database = database
         self.query = DynamoQuery(schema: schema)
     }
 
+    /// Limit the results of the query to the given number.
+    ///
+    /// - Parameters:
+    ///     - limit: The max number of results to return from the query.
     @discardableResult
     public func limit(_ limit: Int) -> Self {
         return setOption(.limit(limit))
     }
 
-    // MARK: - Set
+    // MARK: - Set Keys.
 
-    // MARK: - TODO
-    //          Add a `.set(_ encodable: Encodable)` to allow easier way to
-    //          create `PATCH` request representations, this should also include
-    //          a way to tell if the value is an optional and is `nil` and not `set`
-    //          a value if the model expects a non-optional, if the model expects an
-    //          optional we would probably want to send it as there is no way to tell
-    //          if it's an update or not.
-    //
-    //          We could then most likely remove the `.set(_ data: _)` method or make it internal.
-    //
-    //          We would also need to make sure that it is an object that has `Fields`, so not exactly
-    //          sure how to play that, perhaps the 
-
+    /// Set a sort key filter on the query.
+    ///
+    /// - Parameters:
+    ///     - sortKey: The key path to the sort key field on the model.
+    ///     - value: The value for the sort key filter.
+    ///     - method: The filter method
     @discardableResult
-    public func setSortKey(sortKey key: String, to value: Encodable, method: DynamoQuery.Filter.Method = .equal) -> Self {
+    public func setSortKey(
+        sortKey key: String,
+        to value: Encodable,
+        method: DynamoQuery.Filter.Method = .equal
+    ) -> Self {
         query.sortKey = (key, .bind(value), method)
         return self
     }
 
+    /// Set a partition key filter on the query.
+    ///
+    /// - Parameters:
+    ///     - partitionKey: The key path to the sort key field on the model.
+    ///     - value: The value for the partition key filter.
     @discardableResult
     public func setPartitionKey(partitionKey key: String, to value: Encodable) -> Self {
         query.partitionKey = (key, .bind(value))
         return self
     }
 
+    /// Sets the id keys on the query for batch delete requests.
+    ///
+    /// - Parameters:
+    ///     - keys: The id keys to delete.
     @discardableResult
-    public func setAction(to action: DynamoQuery.Action) -> Self {
-        return self.action(action)
+    public func set(_ keys: [AnyDynamoDatabaseKey]) -> Self {
+        query.input = keys.reduce(into: query.input) { $0.append(.key($1)) }
+        return self
     }
 
+
+    // MARK: - Filter
+    /// Adds a filter to the query.
+    ///
+    /// - Parameters:
+    ///     - filter: The filter for the query.
+    @discardableResult
+    public func filter(_ filter: DynamoQuery.Filter) -> Self {
+        query.filters.append(filter)
+        return self
+    }
+
+    // MARK: - Set Input.
+
+    /// Set the database input for the query.
+    ///
+    /// - Parameters:
+    ///     - data: The database row values.
     @discardableResult
     public func set(_ data: [String: DynamoQuery.Value]) -> Self {
         query.input.append(.dictionary(data))
@@ -67,64 +101,76 @@ public final class DynamoQueryBuilder<Model> {
     }
 
     /// Set query input to an `AttributeEncodable` type.
+    ///
+    /// - Parameters:
+    ///     - data: The attribute encodable to use for the database row values.
     @discardableResult
     public func set<T>(_ data: T) -> Self where T: AttributeEncodable {
         query.input.append(.dictionary(data.encode()))
         return self
     }
 
-    /// Used for batch create.
+    /// Set the query input for multiple rows, used for batch create.
+    ///
+    /// - Parameters:
+    ///     - data: The database row values.
     @discardableResult
     public func set(_ data: [[String: DynamoQuery.Value]]) -> Self {
         query.input = data.reduce(into: query.input) { $0.append(.dictionary($1)) }
         return self
     }
 
-    /// Used for batch delete.
+    /// Set the query input for multiple rows of `AttributeEncodable` types, used for batch create.
+    ///
+    /// - Parameters:
+    ///     - data: The database row values.
     @discardableResult
-    public func set(_ keys: [AnyDynamoDatabaseKey]) -> Self {
-        query.input = keys.reduce(into: query.input) { $0.append(.key($1)) }
-        return self
+    public func set<T>(_ data: [T]) -> Self where T: AttributeEncodable {
+        self.set(data.map { $0.encode() })
     }
 
+    // MARK: Set Options.
+
+    /// Set options on the underlying `DynamoDB` query.  Not all options are valid for
+    /// all query actions, but setting an invalid option will not affect the query operation, it will be ignored.
+    ///
+    /// - Parameters:
+    ///     - option: The option to set on the query.
     @discardableResult
     public func setOption(_ option: DynamoQuery.Option) -> Self {
         query.options.append(option)
         return self
     }
 
-    // MARK: - Filter
-
-    @discardableResult
-    public func filter(_ filter: DynamoQuery.Filter) -> Self {
-        query.filters.append(filter)
-        return self
-    }
-
     // MARK: - Actions
 
+    /// Set the action of the query.
+    ///
+    /// - Parameters:
+    ///     - action: The action for the query.
     @discardableResult
-    internal func action(_ action: DynamoQuery.Action) -> Self {
+    public func setAction(to action: DynamoQuery.Action) -> Self {
         query.action = action
         return self
     }
 
+    /// Run an update operation disregarding the database output.
     public func update() -> EventLoopFuture<Void> {
-        query.action = .update
-        return self.run()
+        self.setAction(to: .update).run()
     }
 
+    /// Run a create operation disregarding the database output.
     public func create() -> EventLoopFuture<Void> {
-        query.action = .create
-        return self.run()
+        self.setAction(to: .create).run()
     }
 
+    /// Run a delete operation disregarding the database output.
     public func delete() -> EventLoopFuture<Void> {
-        query.action = .delete
-        return self.run()
+        self.setAction(to: .delete).run()
     }
 
-    /// Run the query and react to each `AttributeDecodable` that was returned one at a time.
+    /// Run the query and react to each `AttributeDecodable` that was returned one at a time.  This is
+    /// primarily used internally.
     ///
     /// - parameters:
     ///     - onOutput: The callback that reacts to the generated model.
@@ -206,48 +252,9 @@ extension DynamoQueryBuilder where Model: AttributeDecodable {
 
 }
 
-// MARK: - Field Value Filters
-
-public func == <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> DynamoModelValueFilter<Model>
-        where Model: DynamoModel, Field: FieldRepresentible {
-            .init(lhs, .equal, rhs)
-}
-
-public func != <Model, Field>(lhs: KeyPath<Model, Field>, rhs: Field.Value) -> DynamoModelValueFilter<Model>
-        where Model: DynamoModel, Field: FieldRepresentible {
-            .init(lhs, .notEqual, rhs)
-}
-
-public struct DynamoModelValueFilter<Model> where Model: DynamoModel {
-
-    let key: DynamoQuery.Filter.FieldFilterKey
-    let method: DynamoQuery.Filter.Method
-    let value: DynamoQuery.Value
-
-    init<Field>(
-        _ lhs: KeyPath<Model, Field>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Field.Value
-    )
-        where Field: FieldRepresentible
-    {
-        let field = Model()[keyPath: lhs].field
-        self.key = .init(field: field)
-        self.method = method
-        self.value = .bind(value)
-    }
-}
-
-extension DynamoQuery.Filter.FieldFilterKey {
-
-    init(field: AnyField) {
-        self.key = field.key
-        self.isPartitionKey = field.partitionKey
-        self.isSortKey = field.sortKey
-    }
-}
-
 extension DynamoQueryBuilder where Model: DynamoModel {
+    // MARK: DynamoModel Operations.
+
     /// Create a new query builder.
     ///
     /// - parameters:
@@ -256,13 +263,27 @@ extension DynamoQueryBuilder where Model: DynamoModel {
         self.init(schema: Model.schema, database: database)
     }
 
-
+    /// Set a sort key filter on the query.
+    ///
+    /// - Parameters:
+    ///     - sortKey: The key path to the sort key field on the model.
+    ///     - value: The value for the sort key filter.
+    ///     - method: The filter method
     @discardableResult
-    public func setSortKey<Value>(_ sortKey: KeyPath<Model, SortKey<Value>>, to value: Value, method: DynamoQuery.Filter.Method = .equal) -> Self {
+    public func setSortKey<Value>(
+        _ sortKey: KeyPath<Model, SortKey<Value>>,
+        to value: Value,
+        method: DynamoQuery.Filter.Method = .equal
+    ) -> Self {
         query.sortKey = (Model.key(for: sortKey), .bind(value), method)
         return self
     }
 
+    /// Set the input value for a given field on the query.
+    ///
+    /// - Parameters:
+    ///     - key: The key path to the field on the model.
+    ///     - value: The value to set as the input.
     @discardableResult
     public func set<Value>(
         _ key: KeyPath<Model, Field<Value>>,
@@ -275,6 +296,11 @@ extension DynamoQueryBuilder where Model: DynamoModel {
         return self
     }
 
+    /// Set the input value for the given id field of the model.
+    ///
+    /// - Parameters:
+    ///     - key: The key path to the id field on the model.
+    ///     - value: The value to set as the input.
     @discardableResult
     public func set<Value>(
         _ key: KeyPath<Model, ID<Value>>,
@@ -287,33 +313,4 @@ extension DynamoQueryBuilder where Model: DynamoModel {
         return self
     }
 
-    @discardableResult
-    public func filter(_ filter: DynamoModelValueFilter<Model>) -> Self {
-        self.filter(
-            .field(filter.key, filter.method, filter.value)
-        )
-    }
-
-    @discardableResult
-    public func filter<Value>(
-        _ field: KeyPath<Model, Field<Value>>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Value
-    ) -> Self
-        where Value: Codable
-    {
-        return self.filter(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
-    }
-
-    @discardableResult
-    public func filter<Value, Field>(
-        _ field: KeyPath<Model, Field>,
-        _ method: DynamoQuery.Filter.Method,
-        _ value: Value
-    ) -> Self
-        where Field: FieldRepresentible, Field.Value == Value
-    {
-        query.filters.append(.field(.init(field: Model()[keyPath: field].field), method, .bind(value)))
-        return self
-    }
 }

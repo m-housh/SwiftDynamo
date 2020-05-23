@@ -42,7 +42,7 @@ extension DynamoModel {
         self.generateCompositeKeys()
         return Self.query(on: database)
             .set(self.input)
-            .action(.create)
+            .setAction(to: .create)
             .run()
     }
 
@@ -50,7 +50,7 @@ extension DynamoModel {
         return Self.query(on: database)
             .filter(\._$id == self.id!)
             .set(self.input)
-            .action(.update)
+            .setAction(to: .update)
             .run()
     }
 
@@ -63,14 +63,14 @@ extension DynamoModel {
     public static func delete(id: IDValue, on database: DynamoDB) -> EventLoopFuture<Void> {
         Self.query(on: database)
             .filter(\._$id == id)
-            .action(.delete)
+            .setAction(to: .delete)
             .run()
     }
 
     public static func batchCreate(_ items: [Self], on database: DynamoDB) -> EventLoopFuture<[Self]> {
         Self.query(on: database)
             .set(items.map { $0.input })
-            .action(.batchCreate)
+            .setAction(to: .batchCreate)
             .run()
             .map { items }
     }
@@ -78,7 +78,7 @@ extension DynamoModel {
     public static func batchDelete(_ items: [Self], on database: DynamoDB) -> EventLoopFuture<Void> {
         Self.query(on: database)
             .set(items.map { DatabaseKey(key: $0.databaseKey) })
-            .action(.batchDelete)
+            .setAction(to: .batchDelete)
             .run()
     }
 }
